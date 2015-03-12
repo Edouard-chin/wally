@@ -1,3 +1,7 @@
 social_wall_facebook_login:
     path:     /facebook/login
     defaults: { _controller: SocialWallBundle:Default:facebookLogin }
+
+social_wall_facebook_real_time_update:
+    path: /facebook/realtime_update
+    defaults: { _controller: SocialWallBundle:Default:realtimeUpdate }

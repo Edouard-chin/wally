@@ -1,4 +1,4 @@
 services:
    facebook.helper:
        class: SocialWallBundle\Services\FacebookHelper
-       arguments: [ %facebook_id%, %facebook_secret% ]
+       arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token%, %secret%, @router ]

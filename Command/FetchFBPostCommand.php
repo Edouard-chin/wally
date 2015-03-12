@@ -30,11 +30,7 @@ EOT
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $container = $this->getContainer();
-        $em = $container->get('doctrine.orm.entity_manager');
-        $accessToken = $em->getRepository('SocialWallBundle:AccessToken')->find(2);
-        if (!$accessToken) {
-            throw new \Exception('No token Found');
-        }
-        $token = $accessToken->getToken();
+        $facebookHelper = $container->get('facebook.helper');
+        $facebookHelper->getPost();
     }
 }
