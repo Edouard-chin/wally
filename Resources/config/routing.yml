@@ -1,0 +1,3 @@
+social_wall_facebook_login:
+    path:     /facebook/login
+    defaults: { _controller: SocialWallBundle:Default:facebookLogin }

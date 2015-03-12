@@ -1,0 +1,4 @@
+services:
+   facebook.helper:
+       class: SocialWallBundle\Services\FacebookHelper
+       arguments: [ %facebook_id%, %facebook_secret% ]
