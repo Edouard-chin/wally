@@ -13,6 +13,14 @@ use Symfony\Bundle\FrameworkBundle\Routing\Router;
 class FacebookHelper
 {
     const PAGE_NAME = 'Dudek';
+    const PAGE_ID   = 690369934373848;
+
+    static $item = [
+        'photo',
+        'post',
+        'status',
+        'comment'
+    ];
 
     private $fbAppToken;
     private $router;
@@ -33,14 +41,26 @@ class FacebookHelper
         $datas = json_decode($datas, true);
         foreach ($datas['entry'] as $v) {
             foreach ($v['changes'] as $change) {
-                $postId = $change['value']['post_id'];
-                $message = (new FacebookRequest(
-                    $session,
-                    'GET',
-                    "/{$postId}"
-                ))->execute()->getGraphObject();
+                if (!in_array($change['value']['item'], self::$item) || $change['value']['verb'] != 'add') {
+                    continue ;
+                }
+                $postId = array_key_exists('post_id', $change['value']) ? $change['value']['post_id'] : $change['value']['comment_id'];
+                try {
+                    $post = (new FacebookRequest(
+                        $session,
+                        'GET',
+                        "/{$postId}"
+                    ))->execute()->getGraphObject();
+                } catch (FacebookRequestException $e) {
+                    continue;
+                }
+
+                $message = $post->getProperty('message');
+                if (!$message) {
+                    continue;
+                }
                 $newMessages[] = [
-                    'message' => $message->getProperty('message'),
+                    'message' => $post->getProperty('message'),
                     'created' => new \DateTime('@' . $v['time']),
                 ];
             }
@@ -49,20 +69,20 @@ class FacebookHelper
         return $newMessages;
     }
 
-    // public function getPost()
-    // {
-    //     $session = new FacebookSession($this->fbAppToken);
-    //     $posts = (new FacebookRequest(
-    //         $session,
-    //         'GET',
-    //         '/NormanFaitDesVideos/feed'
-    //     ))->execute()->getGraphObjectList();
-    //     foreach ($posts as $v) {
-    //         $message = $v->getProperty('message');
-    //         var_dump($message);
-    //     }
-    //     exit();
-    // }
+    public function getPost()
+    {
+        $session = new FacebookSession($this->fbAppToken);
+        $posts = (new FacebookRequest(
+            $session,
+            'GET',
+            '/' . self::PAGE_ID . '/feed'
+        ))->execute()->getGraphObjectList();
+        var_dump($posts);exit();
+        foreach ($posts as $v) {
+            $message = $v->getProperty('message');
+        }
+        exit();
+    }
 
     public function getUnlimitedAccessToken($url)
     {
