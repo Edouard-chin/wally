@@ -39,13 +39,10 @@ class DefaultController extends Controller
                 return $response;
             }
         } elseif ($request->getMethod() == "POST") {
-            $appSecret = $this->container->getParameter('facebook_secret');
-            $fbSignature = $request->headers->get('X-Hub-Signature');
-            $checkSignature = "sha1=" . hash_hmac('sha1', $request->getContent(), $appSecret);
-            if ($fbSignature == $checkSignature) {
+            $facebookHelper = $this->get('facebook.helper');
+            if ($facebookHelper->checkSignature($request)) {
                 $em = $this->getDoctrine()->getManager();
                 $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->find(1);
-                $facebookHelper = $this->get('facebook.helper');
                 $newMessages = $facebookHelper->retrieveMessageFromData($pageToken->getToken(), $request->getContent());
                 foreach ($newMessages as $v) {
                     $em->persist((new FacebookPost())

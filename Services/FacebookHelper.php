@@ -9,6 +9,7 @@ use Facebook\FacebookRequestException;
 use Facebook\GraphUser;
 
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
+use Symfony\Component\HttpFoundation\Request;
 
 class FacebookHelper
 {
@@ -25,6 +26,7 @@ class FacebookHelper
     private $fbAppToken;
     private $router;
     private $secret;
+    private $fbSecret;
 
     public function __construct($fbId, $fbSecret, $fbAppToken, $secret, Router $router)
     {
@@ -32,6 +34,7 @@ class FacebookHelper
         $this->fbAppToken = $fbAppToken;
         $this->router = $router;
         $this->secret = $secret;
+        $this->fbSecret = $fbSecret;
     }
 
     public function retrieveMessageFromData($pageToken, $datas)
@@ -126,6 +129,14 @@ class FacebookHelper
             false,
             $helper->getLoginUrl(['public_profile,email,manage_pages']),
         ];
+    }
+
+    public function checkSignature(Request $request)
+    {
+        $fbSignature = $request->headers->get('X-Hub-Signature');
+        $signature = "sha1=" . hash_hmac('sha1', $request->getContent(), $this->fbSecret);
+
+        return $signature == $fbSignature;
     }
 
     private function subscribeToPage($pageToken, $pageId)
