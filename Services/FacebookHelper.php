@@ -39,7 +39,10 @@ class FacebookHelper
                     'GET',
                     "/{$postId}"
                 ))->execute()->getGraphObject();
-                $newMessages[] = $message->getProperty('message');
+                $newMessages[] = [
+                    'message' => $message->getProperty('message'),
+                    'created' => new \DateTime('@' . $v['time']),
+                ];
             }
         }
 

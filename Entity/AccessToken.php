@@ -32,7 +32,7 @@ class AccessToken
     /**
      * Get id
      *
-     * @return integer 
+     * @return integer
      */
     public function getId()
     {
@@ -55,7 +55,7 @@ class AccessToken
     /**
      * Get token
      *
-     * @return string 
+     * @return string
      */
     public function getToken()
     {

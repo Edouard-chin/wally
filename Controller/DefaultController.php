@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use SocialWallBundle\Entity\AccessToken;
+use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 
 class DefaultController extends Controller
 {
@@ -46,7 +47,14 @@ class DefaultController extends Controller
                 $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->find(1);
                 $facebookHelper = $this->get('facebook.helper');
                 $newMessages = $facebookHelper->retrieveMessageFromData($pageToken->getToken(), $request->getContent());
-                exit($newMessages);
+                foreach ($newMessages as $v) {
+                    $em->persist((new FacebookPost())
+                        ->setMessage($v['message'])
+                        ->setCreated($v['created'])
+                    );
+                }
+                $em->flush();
+                return $response;
             }
         }
     }
