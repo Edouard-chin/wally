@@ -7,6 +7,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
+
 
 class FetchFBPostCommand extends ContainerAwareCommand
 {
@@ -30,7 +32,15 @@ EOT
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $container = $this->getContainer();
+        $em = $container->get('doctrine.orm.entity_manager');
         $facebookHelper = $container->get('facebook.helper');
-        $facebookHelper->getPost();
+        $datas = $facebookHelper->getPost();
+        foreach ($datas as $v) {
+            $em->persist((new FacebookPost())
+                ->setMessage($v['message'])
+                ->setCreated($v['created'])
+            );
+        }
+        $em->flush();
     }
 }

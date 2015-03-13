@@ -72,16 +72,24 @@ class FacebookHelper
     public function getPost()
     {
         $session = new FacebookSession($this->fbAppToken);
+        $messages = [];
         $posts = (new FacebookRequest(
             $session,
             'GET',
             '/' . self::PAGE_ID . '/feed'
         ))->execute()->getGraphObjectList();
-        var_dump($posts);exit();
         foreach ($posts as $v) {
             $message = $v->getProperty('message');
+            if (!$message) {
+                continue;
+            }
+            $newMessages[] = [
+                'message' => $v->getProperty('message'),
+                'created' => new \DateTime($v->getProperty('get_created')),
+            ];
         }
-        exit();
+
+        return $newMessages;
     }
 
     public function getUnlimitedAccessToken($url)
