@@ -1,4 +1,14 @@
+parameters:
+    facebook_helper.class: "SocialWallBundle\Services\FacebookHelper"
+
 services:
-   facebook.helper:
-       class: SocialWallBundle\Services\FacebookHelper
-       arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token%, %secret%, @router ]
+    social_media_helper:
+        abstract: true
+        calls:
+            - [setRouter, ["@router"]]
+            - [setSymfonySecret, ["%secret%"]]
+
+    facebook_helper:
+        class: "%facebook_helper.class%"
+        arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token% ]
+        parent: social_media_helper

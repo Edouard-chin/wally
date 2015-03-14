@@ -13,7 +13,7 @@ class DefaultController extends Controller
 {
     public function facebookLoginAction()
     {
-        $facebookHelper = $this->get('facebook.helper');
+        $facebookHelper = $this->get('facebook_helper');
         list($isLogged, $data) = $facebookHelper->getUnlimitedAccessToken($this->generateUrl('social_wall_facebook_login', [], true));
         if (!$isLogged) {
             return $this->render('SocialWallBundle:Default:index.html.twig', [
@@ -27,20 +27,18 @@ class DefaultController extends Controller
             $em->persist($accessToken);
             $em->flush();
         }
+
+        exit('All good');
     }
 
     public function realtimeUpdateAction(Request $request)
     {
         $response = new Response();
-        if ($request->getMethod() == "GET") {
-            $secret = $this->container->getParameter('secret');
-            if ($request->query->get('hub_verify_token') == $secret) {
-                $response->setContent($request->query->get('hub_challenge'));
-                return $response;
-            }
+        $facebookHelper = $this->get('facebook_helper');
+        if ($request->getMethod() == "GET" && $facebookHelper->responseToSubscription($request, $response)) {
+            return $response;
         } elseif ($request->getMethod() == "POST") {
-            $facebookHelper = $this->get('facebook.helper');
-            if ($facebookHelper->checkSignature($request)) {
+            if ($facebookHelper->checkPayloadSignature($request)) {
                 $em = $this->getDoctrine()->getManager();
                 $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->find(1);
                 $newMessages = $facebookHelper->retrieveMessageFromData($pageToken->getToken(), $request->getContent());

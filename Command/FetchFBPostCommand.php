@@ -33,7 +33,7 @@ EOT
     {
         $container = $this->getContainer();
         $em = $container->get('doctrine.orm.entity_manager');
-        $facebookHelper = $container->get('facebook.helper');
+        $facebookHelper = $container->get('facebook_helper');
         $datas = $facebookHelper->getPost();
         foreach ($datas as $v) {
             $em->persist((new FacebookPost())

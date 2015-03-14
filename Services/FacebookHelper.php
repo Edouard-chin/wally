@@ -8,10 +8,7 @@ use Facebook\FacebookRedirectLoginHelper;
 use Facebook\FacebookRequestException;
 use Facebook\GraphUser;
 
-use Symfony\Bundle\FrameworkBundle\Routing\Router;
-use Symfony\Component\HttpFoundation\Request;
-
-class FacebookHelper
+class FacebookHelper extends SocialMediaHelper
 {
     const PAGE_NAME = 'Dudek';
     const PAGE_ID   = 690369934373848;
@@ -24,17 +21,12 @@ class FacebookHelper
     ];
 
     private $fbAppToken;
-    private $router;
-    private $secret;
-    private $fbSecret;
 
-    public function __construct($fbId, $fbSecret, $fbAppToken, $secret, Router $router)
+    public function __construct($fbId, $fbSecret, $fbAppToken)
     {
         FacebookSession::setDefaultApplication($fbId, $fbSecret);
         $this->fbAppToken = $fbAppToken;
-        $this->router = $router;
-        $this->secret = $secret;
-        $this->fbSecret = $fbSecret;
+        $this->fbSecret = $this->setAppSecret($fbSecret);
     }
 
     public function retrieveMessageFromData($pageToken, $datas)
@@ -131,14 +123,6 @@ class FacebookHelper
         ];
     }
 
-    public function checkSignature(Request $request)
-    {
-        $fbSignature = $request->headers->get('X-Hub-Signature');
-        $signature = "sha1=" . hash_hmac('sha1', $request->getContent(), $this->fbSecret);
-
-        return $signature == $fbSignature;
-    }
-
     private function subscribeToPage($pageToken, $pageId)
     {
         $pageSession = new FacebookSession($pageToken);
@@ -157,7 +141,7 @@ class FacebookHelper
                     'object' => 'page',
                     'callback_url' => $this->router->generate('social_wall_facebook_real_time_update', [], true),
                     'fields' => 'feed',
-                    'verify_token' => $this->secret,
+                    'verify_token' => $this->symfonySecret,
                 ]
             ))->execute()->getGraphObject();
         }
