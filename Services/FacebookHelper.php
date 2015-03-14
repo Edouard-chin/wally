@@ -29,6 +29,10 @@ class FacebookHelper extends SocialMediaHelper
         $this->fbSecret = $this->setAppSecret($fbSecret);
     }
 
+    /**
+     * @param string $pageToken   The access token of the page
+     * @param string $datas       JSON encoded datas
+     */
     public function retrieveMessageFromData($pageToken, $datas)
     {
         $session = new FacebookSession($pageToken);
@@ -87,6 +91,13 @@ class FacebookHelper extends SocialMediaHelper
         return $newMessages;
     }
 
+    /**
+     * Admin of a facebook page needs to grant our application to manage his pages.
+     * Once done, the subscribeToPage function will make a request to the FB api to get realtime
+     * notification when events occurs on the page.
+     *
+     * @param string $url   An url for facebook callback
+     */
     public function getUnlimitedAccessToken($url)
     {
         $helper = new FacebookRedirectLoginHelper($url);
@@ -111,7 +122,7 @@ class FacebookHelper extends SocialMediaHelper
             foreach ($pages as $v) {
                 if ($v->getProperty('name') == self::PAGE_NAME) {
                     $pageToken = $v->getProperty('access_token');
-                    $this->subscribeToPage($pageToken, $v->getProperty('id'));
+                    $this->subscribeToPage($pageToken);
                     return [true, $pageToken];
                 }
             }
@@ -123,20 +134,26 @@ class FacebookHelper extends SocialMediaHelper
         ];
     }
 
-    private function subscribeToPage($pageToken, $pageId)
+    /**
+     * Make a request to the FB API to subscribe to the page, then,
+     * make another request to subscribe for real time notification on the page.
+     *
+     * @param string $pageToken    The access token of the page
+     */
+    private function subscribeToPage($pageToken)
     {
         $pageSession = new FacebookSession($pageToken);
         $subscription = (new FacebookRequest(
             $pageSession,
             'POST',
-            "/{$pageId}/subscribed_apps"
+            '/' . self::PAGE_ID . '/subscribed_apps'
         ))->execute()->getGraphObject();
         if ($subscription->getProperty('success')) {
             $appSession = new FacebookSession($this->fbAppToken);
             $realTimeUpdate = (new FacebookRequest(
                 $appSession,
                 'POST',
-                "/{$pageId}/subscriptions",
+                '/' . self::PAGE_ID . '/subscriptions',
                 [
                     'object' => 'page',
                     'callback_url' => $this->router->generate('social_wall_facebook_real_time_update', [], true),
