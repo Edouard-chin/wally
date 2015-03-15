@@ -14,10 +14,6 @@ social_wall_facebook_real_time_update:
     path: /facebook/realtime_update
     defaults: { _controller: SocialWallBundle:Default:facebookRealtime }
 
-social_wall_instagram_subscribe:
-    path: /instagram/subscribe
-    defaults: { _controller: SocialWallBundle:Default:subscribe }
-
 social_wall_instagram_real_time_update:
     path: /instagram/realtime_update
     defaults: { _controller: SocialWallBundle:Default:instagramRealTime }

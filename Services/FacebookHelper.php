@@ -61,7 +61,7 @@ class FacebookHelper extends SocialMediaHelper
                     continue;
                 }
                 $newMessages[] = [
-                    'message' => $post->getProperty('message'),
+                    'message' => $message,
                     'created' => (new \DateTime('@' . $v['time']))->setTimeZone(new \DateTimeZone('Europe/Paris')),
                 ];
             }
@@ -119,15 +119,12 @@ class FacebookHelper extends SocialMediaHelper
                 if ($v->getProperty('name') == self::PAGE_NAME) {
                     $pageToken = $v->getProperty('access_token');
                     $this->subscribeToPage($pageToken);
-                    return [true, $pageToken];
+                    return $pageToken;
                 }
             }
         }
 
-        return [
-            false,
-            $helper->getLoginUrl(['public_profile,email,manage_pages']),
-        ];
+        return $helper->getLoginUrl(['public_profile,email,manage_pages']);
     }
 
     /**

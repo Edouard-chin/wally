@@ -38,16 +38,13 @@ class InstagramHelper extends SocialMediaHelper
             ];
             $response = $this->browser->submit('https://api.instagram.com/oauth/access_token', $parameters);
             if ($response->isSuccessful()) {
-                return [true, json_decode($response->getContent(), true)['access_token']];
+                return json_decode($response->getContent(), true)['access_token'];
             } else {
                 throw new OAuthException($response->getReasonPhrase());
             }
         }
 
-        return [
-            false,
-            "https://api.instagram.com/oauth/authorize/?client_id={$this->clientId}&redirect_uri={$url}&response_type=code"
-        ];
+        return "https://api.instagram.com/oauth/authorize/?client_id={$this->clientId}&redirect_uri={$url}&response_type=code";
     }
 
     public function searchForRecentTag($tag, $accessToken, SocialMediaPost $lastMessageRetrieved = null)
