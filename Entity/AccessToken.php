@@ -12,6 +12,9 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class AccessToken
 {
+    const TYPE_FACEBOOK  = 'facebook';
+    const TYPE_INSTAGRAM = 'instagram';
+
     /**
      * @var integer
      *
@@ -28,10 +31,13 @@ class AccessToken
      */
     private $token;
 
+    /**
+     * @ORM\Column(name="type", type="string", length=255)
+     */
+    private $type;
+
 
     /**
-     * Get id
-     *
      * @return integer
      */
     public function getId()
@@ -40,8 +46,6 @@ class AccessToken
     }
 
     /**
-     * Set token
-     *
      * @param string $token
      * @return AccessToken
      */
@@ -53,12 +57,22 @@ class AccessToken
     }
 
     /**
-     * Get token
-     *
      * @return string
      */
     public function getToken()
     {
         return $this->token;
+    }
+
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    public function setTtype($type)
+    {
+        $this->type = $type;
+
+        return $this;
     }
 }

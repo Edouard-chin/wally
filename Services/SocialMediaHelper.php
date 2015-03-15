@@ -6,11 +6,13 @@ use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class SocialMediaHelper
+abstract class SocialMediaHelper
 {
     protected $appSecret;
     protected $router;
     protected $symfonySecret;
+
+    abstract public function oAuthHandler($url, Request $request = null);
 
     /**
      * @param string $appSecret  The secret of the application
@@ -40,10 +42,10 @@ class SocialMediaHelper
     /**
      * @param Request $request
      */
-    public function checkPayloadSignature(Request $request)
+    public function checkPayloadSignature(Request $request, $prefix = '')
     {
         $payloadSignature = $request->headers->get('X-Hub-Signature');
-        $realSignature = "sha1=" . hash_hmac('sha1', $request->getContent(), $this->appSecret);
+        $realSignature = $prefix . hash_hmac('sha1', $request->getContent(), $this->appSecret);
 
         return $realSignature == $payloadSignature;
     }

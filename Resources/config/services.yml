@@ -1,5 +1,6 @@
 parameters:
     facebook_helper.class: "SocialWallBundle\Services\FacebookHelper"
+    instagram_helper.class: "SocialWallBundle\Services\InstagramHelper"
 
 services:
     social_media_helper:
@@ -11,4 +12,9 @@ services:
     facebook_helper:
         class: "%facebook_helper.class%"
         arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token% ]
+        parent: social_media_helper
+
+    instagram_helper:
+        class: "%instagram_helper.class%"
+        arguments: [ %instagram_id%, %instagram_secret% ]
         parent: social_media_helper

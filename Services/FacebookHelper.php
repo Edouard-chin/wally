@@ -8,6 +8,8 @@ use Facebook\FacebookRedirectLoginHelper;
 use Facebook\FacebookRequestException;
 use Facebook\GraphUser;
 
+use Symfony\Component\HttpFoundation\Request;
+
 class FacebookHelper extends SocialMediaHelper
 {
     const PAGE_NAME = 'Dudek';
@@ -26,7 +28,7 @@ class FacebookHelper extends SocialMediaHelper
     {
         FacebookSession::setDefaultApplication($fbId, $fbSecret);
         $this->fbAppToken = $fbAppToken;
-        $this->fbSecret = $this->setAppSecret($fbSecret);
+        $this->setAppSecret($fbSecret);
     }
 
     /**
@@ -98,7 +100,7 @@ class FacebookHelper extends SocialMediaHelper
      *
      * @param string $url   An url for facebook callback
      */
-    public function getUnlimitedAccessToken($url)
+    public function oAuthHandler($url, Request $request = null)
     {
         $helper = new FacebookRedirectLoginHelper($url);
         try {
