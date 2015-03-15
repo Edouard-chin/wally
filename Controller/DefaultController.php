@@ -65,6 +65,7 @@ class DefaultController extends Controller
                     ->setMessage($newPost['message'])
                     ->setCreated($newPost['created'])
                     ->setMinTagId($newPost['minTagId'])
+                    ->setAuthorUsername($newPost['author'])
                     ->setTag($v)
                 );
             }
