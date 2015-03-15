@@ -5,12 +5,12 @@ namespace SocialWallBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * InstagramConfig
+ * SocialMediaConfig
  *
  * @ORM\Table()
  * @ORM\Entity
  */
-class InstagramConfig
+class SocialMediaConfig
 {
     /**
      * @var integer
@@ -28,6 +28,10 @@ class InstagramConfig
      */
     private $tags;
 
+    /**
+     * @ORM\Column(name="type", type="string", length=255)
+     */
+    private $type;
 
     /**
      * @return integer
@@ -39,7 +43,7 @@ class InstagramConfig
 
     /**
      * @param array $tags
-     * @return InstagramConfig
+     * @return SocialMediaConfig
      */
     public function setTags($tags)
     {
@@ -54,5 +58,24 @@ class InstagramConfig
     public function getTags()
     {
         return $this->tags;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     * @return this
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+        return $this;
     }
 }

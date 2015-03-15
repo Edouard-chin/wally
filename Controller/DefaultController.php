@@ -11,6 +11,7 @@ use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Services\SocialMediaHelper;
+use SocialWallBundle\SocialMediaType;
 
 use Facebook\FacebookRequestException;
 
@@ -46,10 +47,13 @@ class DefaultController extends Controller
         } catch (FacebookRequestException $ex) {
             $this->get('session')->getFlashBag()->add('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
             $isLogged = false;
+        } catch (\Exception $e) {
+            $this->get('session')->getFlashBag()->add('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
+            $isLogged = false;
         }
         if ($isLogged) {
             $em = $this->getDoctrine()->getManager();
-            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(AccessToken::TYPE_FACEBOOK, $pageToken);
+            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $pageToken);
             $em->flush();
             $this->get('session')->getFlashBag()->add('success', "Vous êtes bien identifié.");
         }
@@ -71,8 +75,8 @@ class DefaultController extends Controller
         }
         if ($isLogged) {
             $em = $this->getDoctrine()->getManager();
-            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(AccessToken::TYPE_INSTAGRAM, $accessToken);
-            $tags = $em->getRepository('SocialWallBundle:InstagramConfig')->find(1)->getTags();
+            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::INSTAGRAM, $accessToken);
+            $tags = $em->getRepository('SocialWallBundle:SocialMediaConfig')->findOneBy(['type' => SocialMediaType::INSTAGRAM])->getTags();
             foreach ($tags as $v) {
                 foreach ($instagramHelper->searchForRecentTag($v, $accessToken) as $newPost) {
                     $em->persist((new InstagramPost())
@@ -99,7 +103,7 @@ class DefaultController extends Controller
             return $response;
         } elseif ($request->getMethod() == "POST" && $facebookHelper->checkPayloadSignature($request, "sha1=")) {
             $em = $this->getDoctrine()->getManager();
-            $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => AccessToken::TYPE_FACEBOOK]);
+            $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => SocialMediaType::FACEBOOK]);
             $newMessages = $facebookHelper->retrieveMessageFromData($pageToken->getToken(), $request->getContent());
             foreach ($newMessages as $v) {
                 $em->persist((new FacebookPost())
@@ -120,7 +124,7 @@ class DefaultController extends Controller
             return $response;
         } elseif ($request->getMethod() == "POST" && $instagramHelper->checkPayloadSignature($request)) {
             $em = $this->getDoctrine()->getManager();
-            $accessToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => AccessToken::TYPE_INSTAGRAM]);
+            $accessToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => SocialMediaType::INSTAGRAM]);
             foreach (json_decode($request->getContent(), true) as $data) {
                 $tag = $data['object_id'];
                 $lastMessage = $em->getRepository('SocialWallBundle:SocialMediaPost\InstagramPost')->findOneBy(['tag' => $tag], ['retrieved' => 'DESC'], 1);
@@ -143,7 +147,7 @@ class DefaultController extends Controller
     public function subscribeAction(Request $request)
     {
         $em = $this->getDoctrine()->getManager();
-        $tags = $em->getRepository('SocialWallBundle:InstagramConfig')->find(1)->getTags();
+        $tags = $em->getRepository('SocialWallBundle:SocialMediaConfig')->findOneBy(['type' => SocialMediaType::INSTAGRAM])->getTags();
         $instagramHelper = $this->get('instagram_helper');
         $instagramHelper->addSubscription($this->generateUrl('social_wall_instagram_real_time_update', [], true), 'uprodudektest');
         exit('ok!');

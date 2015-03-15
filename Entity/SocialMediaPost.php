@@ -16,10 +16,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 abstract class SocialMediaPost
 {
-    const TYPE_FACEBOOK  = 'facebook';
-    const TYPE_TWITTER   = 'twitter';
-    const TYPE_INSTAGRAM = 'instagram';
-
     /**
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id()

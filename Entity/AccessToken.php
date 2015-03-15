@@ -12,9 +12,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class AccessToken
 {
-    const TYPE_FACEBOOK  = 'facebook';
-    const TYPE_INSTAGRAM = 'instagram';
-
     /**
      * @var integer
      *
