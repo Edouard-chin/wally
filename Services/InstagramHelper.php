@@ -66,8 +66,10 @@ class InstagramHelper extends SocialMediaHelper
             foreach ($json['data'] as $k => $v) {
                 if (in_array($v['type'], self::$item) && array_key_exists('caption', $v)) {
                     $newPosts[$v['id']]['message'] = $v['caption']['text'];
-                    $newPosts[$v['id']]['created'] = new \DateTime('@' . $v['created_time']);
+                    $newPosts[$v['id']]['created'] = (new \DateTime('@' . $v['created_time']))->setTimeZone(new \DateTimeZone('Europe/Paris'));
                     $newPosts[$v['id']]['minTagId'] = $json['pagination']['min_tag_id'];
+                    $newPosts[$v['id']]['author'] = $v['user']['full_name'];
+                    $newPosts[$v['id']]['image'] = $v['images']['standard_resolution']['url'];
                 }
             }
         }

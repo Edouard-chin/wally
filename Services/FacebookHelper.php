@@ -62,7 +62,7 @@ class FacebookHelper extends SocialMediaHelper
                 }
                 $newMessages[] = [
                     'message' => $post->getProperty('message'),
-                    'created' => new \DateTime('@' . $v['time'], new \DateTimeZone('Europe/Paris')),
+                    'created' => (new \DateTime('@' . $v['time']))->setTimeZone(new \DateTimeZone('Europe/Paris')),
                 ];
             }
         }
@@ -86,7 +86,7 @@ class FacebookHelper extends SocialMediaHelper
             }
             $newMessages[] = [
                 'message' => $v->getProperty('message'),
-                'created' => new \DateTime($v->getProperty('get_created'), new \DateTimeZone('Europe/Paris')),
+                'created' => (new \DateTime($v->getProperty('created_time')))->setTimeZone(new \DateTimeZone('Europe/Paris')),
             ];
         }
 

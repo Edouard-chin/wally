@@ -129,6 +129,7 @@ class DefaultController extends Controller
                         ->setMessage($v['message'])
                         ->setCreated($v['created'])
                         ->setMinTagId($v['minTagId'])
+                        ->setAuthorUsername($v['author'])
                         ->setTag($tag)
                     );
                 }
