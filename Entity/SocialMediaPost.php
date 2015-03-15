@@ -43,9 +43,19 @@ abstract class SocialMediaPost
     private $created;
 
     /**
+     * @ORM\Column(type="datetime")
+     */
+    private $retrieved;
+
+    /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $authorUsername;
+
+    public function __construct()
+    {
+        $this->retrieved = new \DateTime();
+    }
 
     /**
      * @return string

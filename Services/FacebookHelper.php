@@ -62,7 +62,7 @@ class FacebookHelper extends SocialMediaHelper
                 }
                 $newMessages[] = [
                     'message' => $post->getProperty('message'),
-                    'created' => new \DateTime('@' . $v['time']),
+                    'created' => new \DateTime('@' . $v['time'], new \DateTimeZone('Europe/Paris')),
                 ];
             }
         }
@@ -86,7 +86,7 @@ class FacebookHelper extends SocialMediaHelper
             }
             $newMessages[] = [
                 'message' => $v->getProperty('message'),
-                'created' => new \DateTime($v->getProperty('get_created')),
+                'created' => new \DateTime($v->getProperty('get_created'), new \DateTimeZone('Europe/Paris')),
             ];
         }
 
@@ -103,13 +103,7 @@ class FacebookHelper extends SocialMediaHelper
     public function oAuthHandler($url, Request $request = null)
     {
         $helper = new FacebookRedirectLoginHelper($url);
-        try {
-            $session = $helper->getSessionFromRedirect();
-        } catch (FacebookRequestException $ex) {
-            throw new FacebookRequestException($ex->getMessage());
-        } catch (\Exception $ex) {
-            throw new \Exception($ex->getMessage());
-        }
+        $session = $helper->getSessionFromRedirect();
         if ($session) {
             $userId = (new FacebookRequest(
                 $session,

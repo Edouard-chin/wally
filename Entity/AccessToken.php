@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * AccessToken
  *
  * @ORM\Table()
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AccessTokenRepository")
  */
 class AccessToken
 {
@@ -69,7 +69,7 @@ class AccessToken
         return $this->type;
     }
 
-    public function setTtype($type)
+    public function setType($type)
     {
         $this->type = $type;
 

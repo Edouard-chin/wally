@@ -9,7 +9,10 @@ use Symfony\Component\HttpFoundation\Response;
 use SocialWallBundle\Entity\AccessToken;
 use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
+use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Services\SocialMediaHelper;
+
+use Facebook\FacebookRequestException;
 
 class DefaultController extends Controller
 {
@@ -38,34 +41,37 @@ class DefaultController extends Controller
     public function facebookLoginAction()
     {
         $facebookHelper = $this->get('facebook_helper');
-        list($isLogged, $pageToken) = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+        try {
+            list($isLogged, $pageToken) = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+        } catch (FacebookRequestException $ex) {
+            $this->get('session')->getFlashBag()->add('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
+            $isLogged = false;
+        }
         if ($isLogged) {
             $em = $this->getDoctrine()->getManager();
-            $token = (new AccessToken())
-                ->setToken($pageToken)
-                ->setTtype(AccessToken::TYPE_FACEBOOK)
-            ;
-            $em->persist($token);
+            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(AccessToken::TYPE_FACEBOOK, $pageToken);
             $em->flush();
+            $this->get('session')->getFlashBag()->add('success', "Vous êtes bien identifié.");
         }
+
         exit('all good!');
     }
 
     public function instagramLoginAction(Request $request)
     {
         $instagramHelper = $this->get('instagram_helper');
-        list($isLogged, $accessToken) = $instagramHelper->oAuthHandler(
-            $this->generateUrl('social_wall_instagram_login', [], true),
-            $request
-        );
+        try {
+            list($isLogged, $accessToken) = $instagramHelper->oAuthHandler(
+                $this->generateUrl('social_wall_instagram_login', [], true),
+                $request
+            );
+        } catch (OAuthException $e) {
+            $this->get('session')->getFlashBag()->add('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
+            $isLogged = false;
+        }
         if ($isLogged) {
             $em = $this->getDoctrine()->getManager();
-            $token = (new AccessToken())
-                ->setToken($accessToken)
-                ->setTtype(AccessToken::TYPE_INSTAGRAM)
-            ;
-            $em->persist($token);
-            $em->flush();
+            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(AccessToken::TYPE_INSTAGRAM, $accessToken);
             $tags = $em->getRepository('SocialWallBundle:InstagramConfig')->find(1)->getTags();
             foreach ($tags as $v) {
                 foreach ($instagramHelper->searchForRecentTag($v, $accessToken) as $newPost) {
@@ -77,12 +83,15 @@ class DefaultController extends Controller
                     );
                 }
             }
+            $instagramHelper->setSubscriptions($this->generateUrl('social_wall_instagram_real_time_update', [], true), $tags);
+            $this->get('session')->getFlashBag()->add('success', "Vous êtes bien identifié.");
+            $em->flush();
         }
-        $em->flush();
+
         exit('all good!');
     }
 
-    public function realtimeUpdateAction(Request $request)
+    public function facebookRealtimeAction(Request $request)
     {
         $response = new Response();
         $facebookHelper = $this->get('facebook_helper');
@@ -110,13 +119,12 @@ class DefaultController extends Controller
         if ($request->getMethod() == "GET" && $instagramHelper->responseToSubscription($request, $response)) {
             return $response;
         } elseif ($request->getMethod() == "POST" && $instagramHelper->checkPayloadSignature($request)) {
-            $datas = json_decode($request->getContent(), true);
             $em = $this->getDoctrine()->getManager();
             $accessToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => AccessToken::TYPE_INSTAGRAM]);
-            foreach ($datas as $data) {
+            foreach (json_decode($request->getContent(), true) as $data) {
                 $tag = $data['object_id'];
-                $lastMessageRetrieved = $em->getRepository('SocialWallBundle:SocialMediaPost\InstagramPost')->findOneBy(['tag' => $tag], ['minTagId' => 'DESC'], 1);
-                foreach ($instagramHelper->searchForRecentTag($tag, $accessToken->getToken(), $lastMessageRetrieved) as $v) {
+                $lastMessage = $em->getRepository('SocialWallBundle:SocialMediaPost\InstagramPost')->findOneBy(['tag' => $tag], ['retrieved' => 'DESC'], 1);
+                foreach ($instagramHelper->searchForRecentTag($tag, $accessToken->getToken(), $lastMessage) as $v) {
                     $em->persist((new InstagramPost())
                         ->setMessage($v['message'])
                         ->setCreated($v['created'])
@@ -136,7 +144,7 @@ class DefaultController extends Controller
         $em = $this->getDoctrine()->getManager();
         $tags = $em->getRepository('SocialWallBundle:InstagramConfig')->find(1)->getTags();
         $instagramHelper = $this->get('instagram_helper');
-        $instagramHelper->addSubscription($this->generateUrl('social_wall_instagram_real_time_update', [], true), 'nofilter');
+        $instagramHelper->addSubscription($this->generateUrl('social_wall_instagram_real_time_update', [], true), 'uprodudektest');
         exit('ok!');
         // $instagramHelper->setSubscriptions($this->generateUrl('social_wall_instagram_real_time_update', [], true), $tags);
     }

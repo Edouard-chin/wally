@@ -5,6 +5,9 @@ namespace SocialWallBundle\Services;
 use Buzz\Exception\ClientException;
 use Symfony\Component\HttpFoundation\Request;
 
+use SocialWallBundle\Exception\OAuthException;
+use SocialWallBundle\Entity\SocialMediaPost;
+
 class InstagramHelper extends SocialMediaHelper
 {
     const API_URI = 'https://api.instagram.com/v1';
@@ -36,6 +39,8 @@ class InstagramHelper extends SocialMediaHelper
             $response = $this->browser->submit('https://api.instagram.com/oauth/access_token', $parameters);
             if ($response->isSuccessful()) {
                 return [true, json_decode($response->getContent(), true)['access_token']];
+            } else {
+                throw new OAuthException($response->getReasonPhrase());
             }
         }
 
@@ -45,7 +50,7 @@ class InstagramHelper extends SocialMediaHelper
         ];
     }
 
-    public function searchForRecentTag($tag, $accessToken, $lastMessageRetrieved = null, $maxTagId = null)
+    public function searchForRecentTag($tag, $accessToken, SocialMediaPost $lastMessageRetrieved = null)
     {
         $parameters = [
             'access_token' => $accessToken
@@ -53,14 +58,11 @@ class InstagramHelper extends SocialMediaHelper
         if ($lastMessageRetrieved) {
             $parameters['min_id'] = $lastMessageRetrieved->getMinTagId();
         }
-        if ($maxTagId) {
-            $parameters['max_id'] = $maxTagId;
-        }
 
         $response = $this->browser->get(self::API_URI . "/tags/{$tag}/media/recent?" . http_build_query($parameters));
         $newPosts = [];
+        $json = json_decode($response->getContent(), true);
         if ($response->isSuccessful()) {
-            $json = json_decode($response->getContent(), true);
             foreach ($json['data'] as $k => $v) {
                 if (in_array($v['type'], self::$item) && array_key_exists('caption', $v)) {
                     $newPosts[$v['id']]['message'] = $v['caption']['text'];
@@ -68,7 +70,6 @@ class InstagramHelper extends SocialMediaHelper
                     $newPosts[$v['id']]['minTagId'] = $json['pagination']['min_tag_id'];
                 }
             }
-
         }
 
         return $newPosts;
@@ -102,16 +103,10 @@ class InstagramHelper extends SocialMediaHelper
     {
         $subscribed = $this->getSubscriptions();
         foreach (array_diff($subscribed, $tags) as $key => $v) {
-            try {
-                $this->removeSubscription($key);
-            } catch (ClientException $e) {
-            }
+            $this->removeSubscription($key);
         }
         foreach(array_diff($tags, $subscribed) as $v) {
-            try {
-                $this->addSubscription($callbackUrl, $v);
-            } catch (ClientException $e) {
-            }
+            $this->addSubscription($callbackUrl, $v);
         }
     }
 
@@ -121,14 +116,14 @@ class InstagramHelper extends SocialMediaHelper
             'client_secret' => $this->appSecret,
             'client_id'     => $this->clientId,
         ]);
-        try {
-            $response = $this->browser->get($url);
-        } catch (ClientException $e) {
-            return false;
-        }
+        $response = $this->browser->get($url);
         $subscriptions = [];
-        $response = json_decode($response->getContent(), true);
-        foreach ($response['data'] as $v) {
+        $json = json_decode($response->getContent(), true);
+        if (!$response->isSuccessful()) {
+            throw new OAuthException($response->getReasonPhrase());
+        }
+
+        foreach ($json['data'] as $v) {
             $subscriptions[$v['id']] = $v['object_id'];
         }
 
