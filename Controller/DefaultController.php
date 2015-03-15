@@ -7,11 +7,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
-use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
+use SocialWallBundle\Event\InstagramEvent;
+use SocialWallBundle\Event\SocialMediaEvent;
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\SocialMediaType;
-
-use Facebook\FacebookRequestException;
 
 class DefaultController extends Controller
 {
@@ -59,22 +58,13 @@ class DefaultController extends Controller
         $em = $this->getDoctrine()->getManager();
         $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::INSTAGRAM, $accessToken);
         $tags = $em->getRepository('SocialWallBundle:SocialMediaConfig')->findOneBy(['type' => SocialMediaType::INSTAGRAM])->getTags();
+        $dispatcher = $this->get('event_dispatcher');
         foreach ($tags as $v) {
-            foreach ($instagramHelper->searchForRecentTag($v, $accessToken) as $newPost) {
-                $em->persist((new InstagramPost())
-                    ->setMessage($newPost['message'])
-                    ->setCreated($newPost['created'])
-                    ->setMinTagId($newPost['minTagId'])
-                    ->setAuthorUsername($newPost['author'])
-                    ->setTag($v)
-                );
-            }
+            $event = new InstagramEvent($accessToken, $v);
+            $dispatcher->dispatch(SocialMediaEvent::INSTAGRAM_NEW_DATA, $event);
         }
         $instagramHelper->setSubscriptions($this->generateUrl('social_wall_instagram_real_time_update', [], true), $tags);
         $this->get('session')->getFlashBag()->add('success', "Vous êtes bien identifié.");
-        $em->flush();
-
-        exit('all good!');
     }
 
     public function facebookRealtimeAction(Request $request)
@@ -96,6 +86,7 @@ class DefaultController extends Controller
             }
             $em->flush();
         }
+
         return $response;
     }
 
@@ -108,22 +99,15 @@ class DefaultController extends Controller
         } elseif ($request->getMethod() == "POST" && $instagramHelper->checkPayloadSignature($request)) {
             $em = $this->getDoctrine()->getManager();
             $accessToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => SocialMediaType::INSTAGRAM]);
+            $dispatcher = $this->get('event_dispatcher');
             foreach (json_decode($request->getContent(), true) as $data) {
                 $tag = $data['object_id'];
                 $lastMessage = $em->getRepository('SocialWallBundle:SocialMediaPost\InstagramPost')->findOneBy(['tag' => $tag], ['retrieved' => 'DESC'], 1);
-                foreach ($instagramHelper->searchForRecentTag($tag, $accessToken->getToken(), $lastMessage) as $v) {
-                    $em->persist((new InstagramPost())
-                        ->setMessage($v['message'])
-                        ->setCreated($v['created'])
-                        ->setMinTagId($v['minTagId'])
-                        ->setAuthorUsername($v['author'])
-                        ->setTag($tag)
-                    );
-                }
+                $event = new InstagramEvent($accessToken->getToken(), $tag, $lastMessage);
+                $dispatcher->dispatch(SocialMediaEvent::INSTAGRAM_NEW_DATA, $event);
             }
-
-            $em->flush();
         }
+
         return $response;
     }
 }

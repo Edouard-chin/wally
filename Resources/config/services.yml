@@ -1,6 +1,7 @@
 parameters:
     facebook_helper.class: "SocialWallBundle\Services\FacebookHelper"
     instagram_helper.class: "SocialWallBundle\Services\InstagramHelper"
+    social_media_listener.class: "SocialWallBundle\EventListener\SocialMediaListener"
 
 services:
     social_media_helper:
@@ -18,3 +19,9 @@ services:
         class: "%instagram_helper.class%"
         arguments: [ %instagram_id%, %instagram_secret% ]
         parent: social_media_helper
+
+    social_media_listener:
+        class: "%social_media_listener.class%"
+        arguments: [ @instagram_helper, @doctrine.orm.entity_manager, @logger ]
+        tags:
+            - { name: kernel.event_subscriber }
