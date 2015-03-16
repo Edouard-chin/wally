@@ -27,6 +27,45 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expectedUrl, $instagramHelper->oAuthHandler($callbackUrl, new Request()));
     }
 
+    /**
+     * @dataProvider retrievedSubscriptions
+     */
+    public function testPayloadSignature($datas)
+    {
+        $instagramHelper = new InstagramHelper('client_id', 'client_secret');
+        $payloadSignature = hash_hmac('sha1', $datas, 'client_secret');
+        $request = new Request(
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            $datas
+        );
+        $request->headers->set('X-Hub-Signature', $payloadSignature);
+        $this->assertTrue($instagramHelper->checkPayloadSignature($request));
+    }
+
+    /**
+     * @dataProvider retrievedSubscriptions
+     */
+    public function testPayloadSignatureFailure($datas)
+    {
+        $instagramHelper = new InstagramHelper('client_id', 'client_secret');
+        $request = new Request(
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            $datas
+        );
+        $request->headers->set('X-Hub-Signature', 'wrong_signature');
+        $this->assertFalse($instagramHelper->checkPayloadSignature($request));
+    }
+
     public function testLoginOnInstagramAfterTheUserApprovedTheApplication()
     {
         $content =
