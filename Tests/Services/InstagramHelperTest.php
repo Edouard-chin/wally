@@ -7,13 +7,16 @@ use Symfony\Component\HttpFoundation\Request;
 
 class InstagramHelperTest extends \PHPUnit_Framework_TestCase
 {
+    const SECRET = 'client_secret';
+    const ID     = 'client_id';
+
     /**
      * @dataProvider retrievedSubscriptions
      */
     public function testRetrieveAllSubscriptions($subscriptions)
     {
         $mock = $this->createBuzz(['HTTP/1.1 200 OK'], $subscriptions, 'get');
-        $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
+        $instagramHelper = new InstagramHelper(self::ID, self::SECRET, $mock);
 
         $this->assertCount(4, $instagramHelper->getSubscriptions());
     }
@@ -21,7 +24,7 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
     public function testLoginOnInstagram()
     {
         $mock = $this->createBuzz(['HTTP/1.1 200 OK']);
-        $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
+        $instagramHelper = new InstagramHelper(self::ID, self::SECRET, $mock);
         $callbackUrl = 'http://redirect.to';
         $expectedUrl = "https://api.instagram.com/oauth/authorize/?client_id=client_id&redirect_uri={$callbackUrl}&response_type=code";
         $this->assertEquals($expectedUrl, $instagramHelper->oAuthHandler($callbackUrl, new Request()));
@@ -32,8 +35,8 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
      */
     public function testPayloadSignature($datas)
     {
-        $instagramHelper = new InstagramHelper('client_id', 'client_secret');
-        $payloadSignature = hash_hmac('sha1', $datas, 'client_secret');
+        $instagramHelper = new InstagramHelper(self::ID, self::SECRET);
+        $payloadSignature = hash_hmac('sha1', $datas, self::SECRET);
         $request = new Request(
             [],
             [],
@@ -52,7 +55,7 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
      */
     public function testPayloadSignatureFailure($datas)
     {
-        $instagramHelper = new InstagramHelper('client_id', 'client_secret');
+        $instagramHelper = new InstagramHelper(self::ID, self::SECRET);
         $request = new Request(
             [],
             [],
@@ -82,7 +85,7 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
             }'
         ;
         $mock = $this->createBuzz(['HTTP/1.1 200 OK'], $content, 'submit');
-        $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
+        $instagramHelper = new InstagramHelper(self::ID, self::SECRET, $mock);
         $callbackUrl = 'http://redirect.to';
         $this->assertEquals('my_access_token', $instagramHelper->oAuthHandler($callbackUrl, new Request(['code' => 'nonce_code'])));
     }
@@ -93,7 +96,7 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
     public function testLoginOnInstagramFailedBecauseOfBadRequest()
     {
         $mock = $this->createBuzz(['HTTP/1.1 400 Bad Request'], null, 'submit');
-        $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
+        $instagramHelper = new InstagramHelper(self::ID, self::SECRET, $mock);
         $callbackUrl = 'http://redirect.to';
         $this->assertEquals('my_access_token', $instagramHelper->oAuthHandler($callbackUrl, new Request(['code' => 'nonce_code'])));
     }
