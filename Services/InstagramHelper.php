@@ -19,11 +19,11 @@ class InstagramHelper extends SocialMediaHelper
     private $clientId;
     private $browser;
 
-    public function __construct($clientId, $clientSecret)
+    public function __construct($clientId, $clientSecret, \Buzz\Browser $browser = null)
     {
         $this->clientId = $clientId;
         $this->setAppSecret($clientSecret);
-        $this->browser = new \Buzz\Browser(new \Buzz\Client\Curl());
+        $this->browser = $browser ?: new \Buzz\Browser(new \Buzz\Client\Curl());
     }
 
     public function oAuthHandler($url, Request $request = null)
