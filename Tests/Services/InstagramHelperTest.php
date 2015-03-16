@@ -12,17 +12,7 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
      */
     public function testRetrieveAllSubscriptions($subscriptions)
     {
-        $response = new \Buzz\Message\Response;
-        $response->setContent($subscriptions);
-        $response->setHeaders(['HTTP/1.1 200 OK']);
-        $mock = $this->getMockBuilder('Buzz\Browser')
-            ->disableOriginalConstructor()
-            ->getMock()
-        ;
-        $mock->expects($this->once())
-            ->method('get')
-            ->will($this->returnValue($response))
-        ;
+        $mock = $this->createBuzz(['HTTP/1.1 200 OK'], $subscriptions, 'get');
         $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
 
         $this->assertCount(4, $instagramHelper->getSubscriptions());
@@ -30,12 +20,7 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
 
     public function testLoginOnInstagram()
     {
-        $response = new \Buzz\Message\Response;
-        $response->setHeaders(['HTTP/1.1 200 OK']);
-        $mock = $this->getMockBuilder('Buzz\Browser')
-            ->disableOriginalConstructor()
-            ->getMock()
-        ;
+        $mock = $this->createBuzz(['HTTP/1.1 200 OK']);
         $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
         $callbackUrl = 'http://redirect.to';
         $expectedUrl = "https://api.instagram.com/oauth/authorize/?client_id=client_id&redirect_uri={$callbackUrl}&response_type=code";
@@ -44,9 +29,7 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
 
     public function testLoginOnInstagramAfterTheUserApprovedTheApplication()
     {
-        $response = new \Buzz\Message\Response;
-        $response->setHeaders(['HTTP/1.1 200 OK']);
-        $response->setContent(
+        $content =
             '{
                 "access_token": "my_access_token",
                 "user": {
@@ -58,15 +41,19 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
                     "id": "123546"
                 }
             }'
-        );
-        $mock = $this->getMockBuilder('Buzz\Browser')
-            ->disableOriginalConstructor()
-            ->getMock()
         ;
-        $mock->expects($this->once())
-            ->method('submit')
-            ->will($this->returnValue($response))
-        ;
+        $mock = $this->createBuzz(['HTTP/1.1 200 OK'], $content, 'submit');
+        $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
+        $callbackUrl = 'http://redirect.to';
+        $this->assertEquals('my_access_token', $instagramHelper->oAuthHandler($callbackUrl, new Request(['code' => 'nonce_code'])));
+    }
+
+    /**
+     * @expectedException SocialWallBundle\Exception\OAuthException
+     */
+    public function testLoginOnInstagramFailedBecauseOfBadRequest()
+    {
+        $mock = $this->createBuzz(['HTTP/1.1 400 Bad Request'], null, 'submit');
         $instagramHelper = new InstagramHelper('client_id', 'client_secret', $mock);
         $callbackUrl = 'http://redirect.to';
         $this->assertEquals('my_access_token', $instagramHelper->oAuthHandler($callbackUrl, new Request(['code' => 'nonce_code'])));
@@ -117,5 +104,26 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
                 }'
             ],
         ];
+    }
+
+    private function createBuzz(array $headers, $content = null, $method = null)
+    {
+        $response = new \Buzz\Message\Response;
+        $response->setHeaders($headers);
+        if ($content) {
+            $response->setContent($content);
+        }
+        $mock = $this->getMockBuilder('Buzz\Browser')
+            ->disableOriginalConstructor()
+            ->getMock()
+        ;
+        if ($method) {
+            $mock->expects($this->once())
+                ->method($method)
+                ->will($this->returnValue($response))
+            ;
+        }
+
+        return $mock;
     }
 }
