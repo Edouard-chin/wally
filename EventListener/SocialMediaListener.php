@@ -13,8 +13,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 
-use Psr\Log\LoggerInterface;
-
 class SocialMediaListener implements EventSubscriberInterface
 {
     private $tag = [];

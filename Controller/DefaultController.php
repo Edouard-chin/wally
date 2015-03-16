@@ -94,6 +94,7 @@ class DefaultController extends Controller
     {
         $response = new Response();
         $instagramHelper = $this->get('instagram_helper');
+
         if ($request->getMethod() == "GET" && $instagramHelper->responseToSubscription($request, $response)) {
             return $response;
         } elseif ($request->getMethod() == "POST" && $instagramHelper->checkPayloadSignature($request)) {

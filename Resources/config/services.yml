@@ -22,6 +22,6 @@ services:
 
     social_media_listener:
         class: "%social_media_listener.class%"
-        arguments: [ @instagram_helper, @doctrine.orm.entity_manager, @logger ]
+        arguments: [ @instagram_helper, @doctrine.orm.entity_manager ]
         tags:
             - { name: kernel.event_subscriber }
