@@ -12,7 +12,7 @@ services:
 
     facebook_helper:
         class: "%facebook_helper.class%"
-        arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token% ]
+        arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token%, @session ]
         parent: social_media_helper
 
     instagram_helper:

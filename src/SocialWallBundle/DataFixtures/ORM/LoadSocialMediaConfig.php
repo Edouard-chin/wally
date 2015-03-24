@@ -31,5 +31,4 @@ class LoadSocialMediaConfig implements FixtureInterface, OrderedFixtureInterface
     {
         return 1;
     }
-
 }

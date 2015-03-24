@@ -18,3 +18,8 @@ parameters:
 
     # A secret key that's used to generate certain security-related tokens
     secret:            ThisTokenIsNotSoSecretChangeIt
+    facebook_id: ~
+    facebook_secret: ~
+    facebook_app_token: ~
+    instagram_id: ~
+    instagram_secret: ~

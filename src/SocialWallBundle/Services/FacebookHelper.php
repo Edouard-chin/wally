@@ -4,11 +4,13 @@ namespace SocialWallBundle\Services;
 
 use Facebook\FacebookSession;
 use Facebook\FacebookRequest;
-use Facebook\FacebookRedirectLoginHelper;
 use Facebook\FacebookRequestException;
 use Facebook\GraphUser;
 
+use SocialWallBundle\Facebook\FacebookRedirectLoginHelper;
+
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class FacebookHelper extends SocialMediaHelper
 {
@@ -23,12 +25,14 @@ class FacebookHelper extends SocialMediaHelper
     ];
 
     private $fbAppToken;
+    private $session;
 
-    public function __construct($fbId, $fbSecret, $fbAppToken)
+    public function __construct($fbId, $fbSecret, $fbAppToken, Session $session)
     {
         FacebookSession::setDefaultApplication($fbId, $fbSecret);
         $this->fbAppToken = $fbAppToken;
         $this->setAppSecret($fbSecret);
+        $this->session = $session;
     }
 
     /**
@@ -102,7 +106,7 @@ class FacebookHelper extends SocialMediaHelper
      */
     public function oAuthHandler($url, Request $request = null)
     {
-        $helper = new FacebookRedirectLoginHelper($url);
+        $helper = new FacebookRedirectLoginHelper($url, $this->session);
         $session = $helper->getSessionFromRedirect();
         if ($session) {
             $userId = (new FacebookRequest(
