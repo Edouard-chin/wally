@@ -1,0 +1,27 @@
+parameters:
+    facebook_helper.class: "SocialWallBundle\Services\FacebookHelper"
+    instagram_helper.class: "SocialWallBundle\Services\InstagramHelper"
+    social_media_listener.class: "SocialWallBundle\EventListener\SocialMediaListener"
+
+services:
+    social_media_helper:
+        abstract: true
+        calls:
+            - [setRouter, ["@router"]]
+            - [setSymfonySecret, ["%secret%"]]
+
+    facebook_helper:
+        class: "%facebook_helper.class%"
+        arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token% ]
+        parent: social_media_helper
+
+    instagram_helper:
+        class: "%instagram_helper.class%"
+        arguments: [ %instagram_id%, %instagram_secret% ]
+        parent: social_media_helper
+
+    social_media_listener:
+        class: "%social_media_listener.class%"
+        arguments: [ @instagram_helper, @doctrine.orm.entity_manager ]
+        tags:
+            - { name: kernel.event_subscriber }

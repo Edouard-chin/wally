@@ -1,0 +1,20 @@
+social_wall_render_social_urls:
+    path:     /social/urls
+    defaults: { _controller: SocialWallBundle:Default:renderSocialUrls }
+
+social_wall_facebook_login:
+    path:     /facebook/login
+    defaults: { _controller: SocialWallBundle:Default:facebookLogin }
+
+social_wall_instagram_login:
+    path:     /instagram/login
+    defaults: { _controller: SocialWallBundle:Default:instagramLogin }
+
+social_wall_facebook_real_time_update:
+    path: /facebook/realtime_update
+    defaults: { _controller: SocialWallBundle:Default:facebookRealtime }
+
+social_wall_instagram_real_time_update:
+    path: /instagram/realtime_update
+    defaults: { _controller: SocialWallBundle:Default:instagramRealTime }
+
