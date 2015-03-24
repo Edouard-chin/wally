@@ -6,7 +6,6 @@
 <body>
   Hello !
 
-  {{ dump(app.session.flashbag.all) }}
   {% for type, flashMessages in app.session.flashbag.all %}
     {% for flash in flashMessages %}
       <div style="color:{% if type == 'error' %}red{% elseif type == 'success' %}green {% endif %}">{{ flash }}</div>
