@@ -13,6 +13,7 @@ class FacebookRedirectLoginHelper extends BaseClass
     public function __construct($redirectUrl, Session $session, $appId = null, $appSecret = null)
     {
         $this->session = $session;
+        parent::__construct($redirectUrl, $appId, $appSecret);
     }
 
     /**

@@ -7,6 +7,7 @@ use Facebook\FacebookRequest;
 use Facebook\FacebookRequestException;
 use Facebook\GraphUser;
 
+use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Facebook\FacebookRedirectLoginHelper;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -14,9 +15,6 @@ use Symfony\Component\HttpFoundation\Session\Session;
 
 class FacebookHelper extends SocialMediaHelper
 {
-    const PAGE_NAME = 'Dudek';
-    const PAGE_ID   = 690369934373848;
-
     static $item = [
         'photo',
         'post',
@@ -26,13 +24,27 @@ class FacebookHelper extends SocialMediaHelper
 
     private $fbAppToken;
     private $session;
+    private $fbPageName;
 
-    public function __construct($fbId, $fbSecret, $fbAppToken, Session $session)
+    public function __construct($fbId, $fbSecret, $fbAppToken, Session $session, $fbPageName)
     {
         FacebookSession::setDefaultApplication($fbId, $fbSecret);
         $this->fbAppToken = $fbAppToken;
         $this->setAppSecret($fbSecret);
         $this->session = $session;
+        $this->fbPageName = $fbPageName;
+    }
+
+    public function getPageId($pageToken)
+    {
+        $appSession = new FacebookSession($pageToken);
+        $page = (new FacebookRequest(
+            $appSession,
+            'GET',
+            "/{$this->fbPageName}"
+        ))->execute()->getGraphObject();
+
+        return $page->getProperty('id');
     }
 
     /**
@@ -76,12 +88,17 @@ class FacebookHelper extends SocialMediaHelper
 
     public function getPost()
     {
+        try {
+            $pageId = $this->getPageId();
+        } catch (FacebookRequestException $e) {
+            return;
+        }
         $session = new FacebookSession($this->fbAppToken);
         $messages = [];
         $posts = (new FacebookRequest(
             $session,
             'GET',
-            '/' . self::PAGE_ID . '/feed'
+            '/' . $pageId . '/feed'
         ))->execute()->getGraphObjectList();
         foreach ($posts as $v) {
             $message = $v->getProperty('message');
@@ -108,6 +125,7 @@ class FacebookHelper extends SocialMediaHelper
     {
         $helper = new FacebookRedirectLoginHelper($url, $this->session);
         $session = $helper->getSessionFromRedirect();
+        $isLogged = false;
         if ($session) {
             $userId = (new FacebookRequest(
                 $session,
@@ -119,16 +137,23 @@ class FacebookHelper extends SocialMediaHelper
                 'GET',
                 "/{$userId}/accounts"
             ))->execute()->getGraphObjectList();
+            $isLogged = true;
             foreach ($pages as $v) {
-                if ($v->getProperty('name') == self::PAGE_NAME) {
+                if ($v->getProperty('name') == $this->fbPageName) {
                     $pageToken = $v->getProperty('access_token');
-                    $this->subscribeToPage($pageToken);
-                    return $pageToken;
+                    try {
+                        $pageId = $this->getPageId($pageToken);
+                    } catch (FacebookRequestException $e) {
+                        throw new OAuthException('Could not retrieve page id');
+                    }
+                    $this->subscribeToPage($pageToken, $pageId);
+                    return [$isLogged, $pageToken];
                 }
             }
+            throw new OAuthException('You are not the admin of the page: ' . $this->fbPageName);
         }
 
-        return $helper->getLoginUrl(['public_profile,email,manage_pages']);
+        return [$isLogged, $helper->getLoginUrl(['public_profile,email,manage_pages'])];
     }
 
     /**
@@ -137,20 +162,20 @@ class FacebookHelper extends SocialMediaHelper
      *
      * @param string $pageToken    The access token of the page
      */
-    private function subscribeToPage($pageToken)
+    private function subscribeToPage($pageToken, $pageId)
     {
         $pageSession = new FacebookSession($pageToken);
         $subscription = (new FacebookRequest(
             $pageSession,
             'POST',
-            '/' . self::PAGE_ID . '/subscribed_apps'
+            '/' . $pageId . '/subscribed_apps'
         ))->execute()->getGraphObject();
         if ($subscription->getProperty('success')) {
             $appSession = new FacebookSession($this->fbAppToken);
             $realTimeUpdate = (new FacebookRequest(
                 $appSession,
                 'POST',
-                '/' . self::PAGE_ID . '/subscriptions',
+                '/' . $pageId . '/subscriptions',
                 [
                     'object' => 'page',
                     'callback_url' => $this->router->generate('social_wall_facebook_real_time_update', [], true),

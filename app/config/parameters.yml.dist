@@ -21,5 +21,6 @@ parameters:
     facebook_id: ~
     facebook_secret: ~
     facebook_app_token: ~
+    facebook_page_name: caribouausoleil
     instagram_id: ~
     instagram_secret: ~

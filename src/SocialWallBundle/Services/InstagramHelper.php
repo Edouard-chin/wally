@@ -87,6 +87,9 @@ class InstagramHelper extends SocialMediaHelper
         ];
 
         $response = $this->browser->submit(self::API_URI . '/subscriptions/', $parameters);
+        if (!$response->isSuccessful()) {
+            throw new OAuthException();
+        }
     }
 
     public function removeSubscription($id)
@@ -96,6 +99,9 @@ class InstagramHelper extends SocialMediaHelper
             'client_id'     => $this->clientId,
             'id'            => $id,
         ]));
+        if (!$response->isSuccessful()) {
+            throw new OAuthException();
+        }
     }
 
     public function setSubscriptions($callbackUrl, array $tags)

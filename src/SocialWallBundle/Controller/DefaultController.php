@@ -19,8 +19,8 @@ class DefaultController extends Controller
         $instagramHelper = $this->get('instagram_helper');
         $facebookHelper = $this->get('facebook_helper');
 
-        $fbUrl = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
-        $instagramUrl = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
+        list(,$fbUrl) = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+        list(,$instagramUrl) = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
 
         return $this->render('SocialWallBundle:Default:index.html.twig', [
             'facebookUrl' => $fbUrl,
@@ -33,13 +33,18 @@ class DefaultController extends Controller
         $facebookHelper = $this->get('facebook_helper');
 
         try {
-            $pageToken = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+            list($isLogged, $pageToken) = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+            if (!$isLogged) {
+                return $this->redirectToRoute('social_wall_render_social_urls');
+            }
             $em = $this->getDoctrine()->getManager();
             $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $pageToken);
             $em->flush();
-            $this->get('session')->getFlashBag()->add('success', "Vous êtes bien identifié.");
+            $this->addFlash('success', "Vous êtes bien identifié.");
+        } catch (OAuthException $e) {
+            $this->addFlash('error', $e->getMessage());
         } catch (\Exception $e) {
-            $this->get('session')->getFlashBag()->add('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
+            $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
         }
 
         exit('all good!');
@@ -51,8 +56,8 @@ class DefaultController extends Controller
         try {
             $accessToken = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
         } catch (OAuthException $e) {
-            $this->get('session')->getFlashBag()->add('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
-            return $this->redirect($this->generateUrl('social_wall_render_social_urls'));
+            $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
+            return $this->redirectToRoute('social_wall_render_social_urls');
         }
 
         $em = $this->getDoctrine()->getManager();
@@ -63,8 +68,12 @@ class DefaultController extends Controller
             $event = new InstagramEvent($accessToken, $v);
             $dispatcher->dispatch(SocialMediaEvent::INSTAGRAM_NEW_DATA, $event);
         }
-        $instagramHelper->setSubscriptions($this->generateUrl('social_wall_instagram_real_time_update', [], true), $tags);
-        $this->get('session')->getFlashBag()->add('success', "Vous êtes bien identifié.");
+        try {
+            $instagramHelper->setSubscriptions($this->generateUrl('social_wall_instagram_real_time_update', [], true), $tags);
+        } catch (OAuthException $e) {
+            $this->addFlash('error', "Nous n'avons pas pu souscrire aux tags");
+        }
+        $this->addFlash('success', "Vous êtes bien identifié.");
     }
 
     public function facebookRealtimeAction(Request $request)
