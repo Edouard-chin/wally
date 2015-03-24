@@ -1,6 +1,2 @@
-app:
-    resource: "@AppBundle/Controller/"
-    type:     annotation
-
 social_wall:
     resource: "@SocialWallBundle/Resources/config/routing.yml"
