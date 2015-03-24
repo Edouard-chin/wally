@@ -74,9 +74,15 @@ class FacebookHelper extends SocialMediaHelper
         return $newMessages;
     }
 
-    public function getPost($pageToken, $pageId)
+    public function getOlderPosts($pageToken)
     {
         $session = new FacebookSession($pageToken);
+        $pageId = (new FacebookRequest(
+            $session,
+            'GET',
+            "/debug_token",
+            ['input_token' => $pageToken]
+        ))->execute()->getGraphObject()->getProperty('profile_id');
         $messages = [];
         $posts = (new FacebookRequest(
             $session,
@@ -108,7 +114,6 @@ class FacebookHelper extends SocialMediaHelper
     {
         $helper = new FacebookRedirectLoginHelper($url, $this->session);
         $session = $helper->getSessionFromRedirect();
-        $isLogged = false;
         if ($session) {
             $userId = (new FacebookRequest(
                 $session,
@@ -120,18 +125,16 @@ class FacebookHelper extends SocialMediaHelper
                 'GET',
                 "/{$userId}/accounts"
             ))->execute()->getGraphObjectList();
-            $isLogged = true;
             foreach ($pages as $v) {
                 if ($v->getProperty('name') == $this->fbPageName) {
-                    $pageToken = $v->getProperty('access_token');
-                    $this->subscribeToPage($pageToken, $v->getProperty('id'));
-                    return [$isLogged, $pageToken];
+                    $this->subscribeToPage($v->getProperty('access_token'), $v->getProperty('id'));
+                    return $v;
                 }
             }
             throw new OAuthException('You are not the admin of the page: ' . $this->fbPageName);
         }
 
-        return [$isLogged, $helper->getLoginUrl(['public_profile,email,manage_pages'])];
+        return $helper->getLoginUrl(['public_profile,email,manage_pages']);
     }
 
     /**

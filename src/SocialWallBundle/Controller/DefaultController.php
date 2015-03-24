@@ -19,8 +19,8 @@ class DefaultController extends Controller
         $instagramHelper = $this->get('instagram_helper');
         $facebookHelper = $this->get('facebook_helper');
 
-        list(,$fbUrl) = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
-        list(,$instagramUrl) = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
+        $fbUrl = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+        $instagramUrl = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
 
         return $this->render('SocialWallBundle:Default:index.html.twig', [
             'facebookUrl' => $fbUrl,
@@ -33,12 +33,12 @@ class DefaultController extends Controller
         $facebookHelper = $this->get('facebook_helper');
 
         try {
-            list($isLogged, $pageToken) = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
-            if (!$isLogged) {
+            $page = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+            if (!is_object($page)) {
                 return $this->redirectToRoute('social_wall_render_social_urls');
             }
             $em = $this->getDoctrine()->getManager();
-            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $pageToken);
+            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $page->getProperty('access_token'));
             $em->flush();
             $this->addFlash('success', "Vous êtes bien identifié.");
         } catch (OAuthException $e) {

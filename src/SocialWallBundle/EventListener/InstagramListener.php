@@ -13,7 +13,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 
-class SocialMediaListener implements EventSubscriberInterface
+class InstagramListener implements EventSubscriberInterface
 {
     private $tag = [];
     private $instagramHelper;

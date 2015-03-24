@@ -1,7 +1,7 @@
 parameters:
     facebook_helper.class: "SocialWallBundle\Services\FacebookHelper"
     instagram_helper.class: "SocialWallBundle\Services\InstagramHelper"
-    social_media_listener.class: "SocialWallBundle\EventListener\SocialMediaListener"
+    social_media_listener.class: "SocialWallBundle\EventListener\InstagramListener"
 
 services:
     social_media_helper:
