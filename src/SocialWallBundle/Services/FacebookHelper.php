@@ -35,18 +35,6 @@ class FacebookHelper extends SocialMediaHelper
         $this->fbPageName = $fbPageName;
     }
 
-    public function getPageId($pageToken)
-    {
-        $appSession = new FacebookSession($pageToken);
-        $page = (new FacebookRequest(
-            $appSession,
-            'GET',
-            "/{$this->fbPageName}"
-        ))->execute()->getGraphObject();
-
-        return $page->getProperty('id');
-    }
-
     /**
      * @param string $pageToken   The access token of the page
      * @param string $datas       JSON encoded datas
@@ -86,14 +74,9 @@ class FacebookHelper extends SocialMediaHelper
         return $newMessages;
     }
 
-    public function getPost()
+    public function getPost($pageToken, $pageId)
     {
-        try {
-            $pageId = $this->getPageId();
-        } catch (FacebookRequestException $e) {
-            return;
-        }
-        $session = new FacebookSession($this->fbAppToken);
+        $session = new FacebookSession($pageToken);
         $messages = [];
         $posts = (new FacebookRequest(
             $session,
@@ -141,12 +124,7 @@ class FacebookHelper extends SocialMediaHelper
             foreach ($pages as $v) {
                 if ($v->getProperty('name') == $this->fbPageName) {
                     $pageToken = $v->getProperty('access_token');
-                    try {
-                        $pageId = $this->getPageId($pageToken);
-                    } catch (FacebookRequestException $e) {
-                        throw new OAuthException('Could not retrieve page id');
-                    }
-                    $this->subscribeToPage($pageToken, $pageId);
+                    $this->subscribeToPage($pageToken, $v->getProperty('id'));
                     return [$isLogged, $pageToken];
                 }
             }
