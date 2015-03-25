@@ -1,7 +1,8 @@
 parameters:
     facebook_helper.class: "SocialWallBundle\Services\FacebookHelper"
     instagram_helper.class: "SocialWallBundle\Services\InstagramHelper"
-    social_media_listener.class: "SocialWallBundle\EventListener\InstagramListener"
+    instagram_listener.class: "SocialWallBundle\EventListener\InstagramListener"
+    facebook_listener.class: "SocialWallBundle\EventListener\FacebookListener"
 
 services:
     social_media_helper:
@@ -15,13 +16,19 @@ services:
         arguments: [ %facebook_id%, %facebook_secret%, %facebook_app_token%, @session, %facebook_page_name% ]
         parent: social_media_helper
 
+    facebook_listener:
+        class: "%facebook_listener.class%"
+        arguments: [ @facebook_helper, @doctrine.orm.entity_manager ]
+        tags:
+            - { name: kernel.event_subscriber }
+
     instagram_helper:
         class: "%instagram_helper.class%"
         arguments: [ %instagram_id%, %instagram_secret% ]
         parent: social_media_helper
 
-    social_media_listener:
-        class: "%social_media_listener.class%"
+    instagram_listener:
+        class: "%instagram_listener.class%"
         arguments: [ @instagram_helper, @doctrine.orm.entity_manager ]
         tags:
             - { name: kernel.event_subscriber }

@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Event\InstagramEvent;
+use SocialWallBundle\Event\FacebookEvent;
 use SocialWallBundle\Event\SocialMediaEvent;
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\SocialMediaType;
@@ -41,13 +42,16 @@ class DefaultController extends Controller
             $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $page->getProperty('access_token'));
             $em->flush();
             $this->addFlash('success', "Vous êtes bien identifié.");
+            $dispatcher = $this->get('event_dispatcher');
+            $event = new FacebookEvent($page->getProperty('access_token'), 'import');
+            $dispatcher->dispatch(SocialMediaEvent::FACEBOOK_NEW_DATA, $event);
         } catch (OAuthException $e) {
             $this->addFlash('error', $e->getMessage());
         } catch (\Exception $e) {
             $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
         }
 
-        exit('all good!');
+        return new Response();
     }
 
     public function instagramLoginAction(Request $request)
@@ -86,14 +90,9 @@ class DefaultController extends Controller
         } elseif ($request->getMethod() == "POST" && $facebookHelper->checkPayloadSignature($request, "sha1=")) {
             $em = $this->getDoctrine()->getManager();
             $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => SocialMediaType::FACEBOOK]);
-            $newMessages = $facebookHelper->retrieveMessageFromData($pageToken->getToken(), $request->getContent());
-            foreach ($newMessages as $v) {
-                $em->persist((new FacebookPost())
-                    ->setMessage($v['message'])
-                    ->setCreated($v['created'])
-                );
-            }
-            $em->flush();
+            $dispatcher = $this->get('event_dispatcher');
+            $event = new FacebookEvent($pageToken->getToken(), 'fetch', $request->getContent());
+            $dispatcher->dispatch(SocialMediaEvent::FACEBOOK_NEW_DATA, $event);
         }
 
         return $response;
