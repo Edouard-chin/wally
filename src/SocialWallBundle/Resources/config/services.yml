@@ -3,6 +3,8 @@ parameters:
     instagram_helper.class: "SocialWallBundle\Services\InstagramHelper"
     instagram_listener.class: "SocialWallBundle\EventListener\InstagramListener"
     facebook_listener.class: "SocialWallBundle\EventListener\FacebookListener"
+    faye_curl_adapter.class: "Nc\FayeClient\Adapter\CurlAdapter"
+    faye_client.class: "Nc\FayeClient\Client"
 
 services:
     social_media_helper:
@@ -18,7 +20,7 @@ services:
 
     facebook_listener:
         class: "%facebook_listener.class%"
-        arguments: [ @facebook_helper, @doctrine.orm.entity_manager ]
+        arguments: [ @facebook_helper, @doctrine.orm.entity_manager, @faye_client ]
         tags:
             - { name: kernel.event_subscriber }
 
@@ -29,6 +31,13 @@ services:
 
     instagram_listener:
         class: "%instagram_listener.class%"
-        arguments: [ @instagram_helper, @doctrine.orm.entity_manager ]
+        arguments: [ @instagram_helper, @doctrine.orm.entity_manager, @faye_client ]
         tags:
             - { name: kernel.event_subscriber }
+
+    faye_curl_adapter:
+        class: %faye_curl_adapter.class%
+
+    faye_client:
+        class: "%faye_client.class%"
+        arguments: [ @faye_curl_adapter, "http://localhost:3000" ]

@@ -7,6 +7,7 @@ use SocialWallBundle\Event\SocialMediaEvent;
 use SocialWallBundle\Event\FacebookEvent;
 use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Services\FacebookHelper;
+use Nc\FayeClient\Client;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -19,11 +20,13 @@ class FacebookListener implements EventSubscriberInterface
     private $om;
     private $token;
     private $type;
+    private $client;
 
-    public function __construct(FacebookHelper $facebookHelper, ObjectManager $om)
+    public function __construct(FacebookHelper $facebookHelper, ObjectManager $om, Client $client)
     {
         $this->facebookHelper = $facebookHelper;
         $this->om = $om;
+        $this->client = $client;
     }
 
     public static function getSubscribedEvents()
@@ -61,6 +64,7 @@ class FacebookListener implements EventSubscriberInterface
                     ->setCreated($v['created'])
             );
         }
+        $this->client->send('/social-feed', $newMessages);
         $this->om->flush();
         $this->content = null;
     }

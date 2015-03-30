@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "f0706a38259d467a92500aeb3282faeb",
+    "hash": "a5fc220ed33ffc21b808c066fcaa06d9",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1167,6 +1167,53 @@
                 "psr-3"
             ],
             "time": "2015-03-09 09:58:04"
+        },
+        {
+            "name": "nc/faye-client",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nchaulet/faye-client.git",
+                "reference": "2e0eccebd1bd8d08a09315f4b310a521b3bc7f9f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nchaulet/faye-client/zipball/2e0eccebd1bd8d08a09315f4b310a521b3bc7f9f",
+                "reference": "2e0eccebd1bd8d08a09315f4b310a521b3bc7f9f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "atoum/atoum": "dev-master",
+                "guzzle/guzzle": "~3.0"
+            },
+            "suggest": {
+                "guzzle/guzzle": "~3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Nc\\FayeClient": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "nchaulet",
+                    "email": "n.chaulet@gmail.com"
+                }
+            ],
+            "description": "Php client for interacting with faye server",
+            "keywords": [
+                "faye",
+                "websocket"
+            ],
+            "time": "2013-09-17 18:23:31"
         },
         {
             "name": "psr/log",

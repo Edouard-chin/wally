@@ -23,7 +23,8 @@
         "sensio/framework-extra-bundle": "~3.0,>=3.0.2",
         "incenteev/composer-parameter-handler": "~2.0",
         "facebook/php-sdk-v4" : "4.0.*",
-        "kriswallsmith/buzz": "0.13.*"
+        "kriswallsmith/buzz": "0.13.*",
+        "nc/faye-client": "v1.1.0"
     },
     "require-dev": {
         "sensio/generator-bundle": "~2.3"
