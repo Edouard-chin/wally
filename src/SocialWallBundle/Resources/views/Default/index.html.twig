@@ -16,4 +16,11 @@
   <a href="{{ instagramUrl }}"> Click here to login on instagram </a>
 
 </body>
+<script type="text/javascript" src="http://localhost:3000/client.js"></script>
+<script>
+var client = new Faye.Client('http://localhost:3000/');
+client.subscribe('/social-feed', function (message) {
+  console.log(message);
+});
+</script>
 </html>
