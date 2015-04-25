@@ -2,9 +2,11 @@
 
 namespace SocialWallBundle\Services;
 
+use Facebook\Entities\AccessToken;
 use Facebook\FacebookSession;
 use Facebook\FacebookRequest;
 use Facebook\FacebookRequestException;
+use Facebook\FacebookAuthorizationException;
 use Facebook\GraphUser;
 
 use SocialWallBundle\Exception\OAuthException;
@@ -24,15 +26,13 @@ class FacebookHelper extends SocialMediaHelper
 
     private $fbAppToken;
     private $session;
-    private $fbPageName;
 
-    public function __construct($fbId, $fbSecret, $fbAppToken, Session $session, $fbPageName)
+    public function __construct($fbId, $fbSecret, $fbAppToken, Session $session)
     {
         FacebookSession::setDefaultApplication($fbId, $fbSecret);
         $this->fbAppToken = $fbAppToken;
         $this->setAppSecret($fbSecret);
         $this->session = $session;
-        $this->fbPageName = $fbPageName;
     }
 
     /**
@@ -104,37 +104,49 @@ class FacebookHelper extends SocialMediaHelper
     }
 
     /**
-     * Admin of a facebook page needs to grant our application to manage his pages.
-     * Once done, the subscribeToPage function will make a request to the FB api to get realtime
-     * notification when events occurs on the page.
-     *
      * @param string $url   An url for facebook callback
      */
     public function oAuthHandler($url, Request $request = null)
     {
         $helper = new FacebookRedirectLoginHelper($url, $this->session);
-        $session = $helper->getSessionFromRedirect();
-        if ($session) {
-            $userId = (new FacebookRequest(
-                $session,
-                'GET',
-                '/me'
-            ))->execute()->getGraphObject(GraphUser::className())->getId();
-            $pages = (new FacebookRequest(
-                $session,
-                'GET',
-                "/{$userId}/accounts"
-            ))->execute()->getGraphObjectList();
-            foreach ($pages as $v) {
-                if ($v->getProperty('name') == $this->fbPageName) {
-                    $this->subscribeToPage($v->getProperty('access_token'), $v->getProperty('id'));
-                    return $v;
-                }
+
+        return $helper->getSessionFromRedirect() ?: $helper->getLoginUrl(['public_profile,email,manage_pages']);
+    }
+
+    public function addSubscription($userAccessToken, $callbackUrl, $pageName)
+    {
+        if (!(new AccessToken($userAccessToken))->isValid()) {
+            throw new FacebookAuthorizationException();
+        }
+        $session = new FacebookSession($userAccessToken);
+        $pages = (new FacebookRequest(
+            $session,
+            'GET',
+            "/me/accounts"
+        ))->execute()->getGraphObjectList(\Facebook\GraphPage::className());
+        foreach ($pages as $page) {
+            if ($page->getId() == getPageInfo($userAccessToken, $pageName)->getId()) {
+                $this->subscribeToPage($page->getProperty('access_token'), $page->getId(), $callbackUrl);
+                return $page;
             }
-            throw new OAuthException('You are not the admin of the page: ' . $this->fbPageName);
         }
 
-        return $helper->getLoginUrl(['public_profile,email,manage_pages']);
+        throw new OAuthException("You are not the admin of the page: {$page}");
+    }
+
+    public function getPageInfo($token, $pageName)
+    {
+        try {
+            $page = (new FacebookRequest(
+                new FacebookSession($token),
+                'GET',
+                "/{$pageName}"
+            ))->execute()->getGraphObject(\Facebook\GraphPage::className());
+        } catch (FacebookAuthorizationException $e) {
+            return false;
+        }
+
+        return $page;
     }
 
     /**
@@ -143,13 +155,13 @@ class FacebookHelper extends SocialMediaHelper
      *
      * @param string $pageToken    The access token of the page
      */
-    private function subscribeToPage($pageToken, $pageId)
+    private function subscribeToPage($pageToken, $pageId, $callbackUrl)
     {
         $pageSession = new FacebookSession($pageToken);
         $subscription = (new FacebookRequest(
             $pageSession,
             'POST',
-            '/' . $pageId . '/subscribed_apps'
+            "/{$pageId}/subscribed_apps"
         ))->execute()->getGraphObject();
         if ($subscription->getProperty('success')) {
             $appSession = new FacebookSession($this->fbAppToken);
@@ -159,7 +171,7 @@ class FacebookHelper extends SocialMediaHelper
                 '/' . $pageId . '/subscriptions',
                 [
                     'object' => 'page',
-                    'callback_url' => $this->router->generate('social_wall_facebook_real_time_update', [], true),
+                    'callback_url' => $callbackUrl,
                     'fields' => 'feed',
                     'verify_token' => $this->symfonySecret,
                 ]
