@@ -2,6 +2,8 @@
 
 namespace SocialWallBundle\Controller;
 
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,13 +17,16 @@ use SocialWallBundle\SocialMediaType;
 
 class DefaultController extends Controller
 {
+    /**
+     * @Route("/social/urls", name="render_social_urls")
+     */
     public function renderSocialUrlsAction(Request $request)
     {
         $instagramHelper = $this->get('instagram_helper');
         $facebookHelper = $this->get('facebook_helper');
 
-        $fbUrl = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
-        $instagramUrl = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
+        $fbUrl = $facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true));
+        $instagramUrl = $instagramHelper->oAuthHandler($this->generateUrl('instagram_login', [], true), $request);
 
         return $this->render('SocialWallBundle:Default:index.html.twig', [
             'facebookUrl' => $fbUrl,
@@ -29,14 +34,17 @@ class DefaultController extends Controller
         ]);
     }
 
+    /**
+     * @Route("/facebook/login", name="facebook_login")
+     */
     public function facebookLoginAction()
     {
         $facebookHelper = $this->get('facebook_helper');
 
         try {
-            $page = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
+            $page = $facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true));
             if (!is_object($page)) {
-                return $this->redirectToRoute('social_wall_render_social_urls');
+                return $this->redirectToRoute('render_social_urls');
             }
             $em = $this->getDoctrine()->getManager();
             $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $page->getProperty('access_token'));
@@ -54,14 +62,17 @@ class DefaultController extends Controller
         return new Response();
     }
 
+    /**
+     * @Route("/instagram/login", name="instagram_login")
+     */
     public function instagramLoginAction(Request $request)
     {
         $instagramHelper = $this->get('instagram_helper');
         try {
-            $accessToken = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
+            $accessToken = $instagramHelper->oAuthHandler($this->generateUrl('instagram_login', [], true), $request);
         } catch (OAuthException $e) {
             $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
-            return $this->redirectToRoute('social_wall_render_social_urls');
+            return $this->redirectToRoute('render_social_urls');
         }
 
         $em = $this->getDoctrine()->getManager();
@@ -73,13 +84,16 @@ class DefaultController extends Controller
             $dispatcher->dispatch(SocialMediaEvent::INSTAGRAM_NEW_DATA, $event);
         }
         try {
-            $instagramHelper->setSubscriptions($this->generateUrl('social_wall_instagram_real_time_update', [], true), $tags);
+            $instagramHelper->setSubscriptions($this->generateUrl('instagram_real_time_update', [], true), $tags);
         } catch (OAuthException $e) {
             $this->addFlash('error', "Nous n'avons pas pu souscrire aux tags");
         }
         $this->addFlash('success', "Vous êtes bien identifié.");
     }
 
+    /**
+     * @Route("/facebook/realtime_update", name="facebook_real_time_update")
+     */
     public function facebookRealtimeAction(Request $request)
     {
         $response = new Response();
@@ -98,6 +112,9 @@ class DefaultController extends Controller
         return $response;
     }
 
+    /**
+     * @Route("/instagram/realtime_update", name="instagram_real_time_update")
+     */
     public function instagramRealTimeAction(Request $request)
     {
         $response = new Response();
