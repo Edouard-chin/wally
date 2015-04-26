@@ -6,7 +6,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 
-use SocialWallBundle\Entity\SocialMediaConfig;
+use SocialWallBundle\Entity\SocialMediaConfig\InstagramConfig;
 use SocialWallBundle\SocialMediaType;
 
 class LoadSocialMediaConfig implements FixtureInterface, OrderedFixtureInterface
@@ -20,9 +20,8 @@ class LoadSocialMediaConfig implements FixtureInterface, OrderedFixtureInterface
             'caribouAuSoleil'
         ];
 
-        $manager->persist((new SocialMediaConfig())
+        $manager->persist((new InstagramConfig())
             ->setTags($instagramTags)
-            ->setType(SocialMediaType::INSTAGRAM)
         );
         $manager->flush();
     }
