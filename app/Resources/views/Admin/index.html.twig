@@ -1,0 +1,37 @@
+{% extends '::base_admin.html.twig' %}
+{% block container %}
+  <div role="tabpanel">
+    <ul class="nav nav-tabs" role="tablist">
+      <li role="presentation" class="active"><a data-toggle="tab" href="#home">Config Facebook</a></li>
+      <li role="presentation"><a data-toggle="tab" href="#profile">Config Twitter</a></li>
+      <li role="presentation"><a data-toggle="tab" href="#messages">Config Instagram</a></li>
+    </ul>
+    <div class="tab-content">
+      <div role="tabpanel" class="tab-pane fade in active" id="home">
+        {% if app.session.get('user_access_token') %}
+          <form action="{{ path('admin_facebook_subscribe') }}" method="POST">
+            <div class="form-group">
+              <input class="form-control" name="facebook_page"/>
+            </div>
+            <button type="submit" class="btn btn-success">Ajouter</button>
+          </form>
+        {% endif %}
+        <div class="row">
+          {% for facebookPage in facebookPages %}
+            <div class="col-sm-4"> {{ facebookPage.pageName }}</div>
+            <div class="col-sm-4">
+              <form action="{{ path('admin_facebook_unsubscribe', {'pageName': facebookPage.pageName}) }}" method="POST">
+                <input type="hidden" name="facebook_page" value="{{ facebookPage.pageName }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token('subscription_remove') }}">
+                <button type="submit" class="btn btn-danger">Supprimer</button>
+              </form>
+            </div>
+            <div class="clearfix"></div>
+          {% endfor %}
+        </div>
+      </div>
+      <div role="tabpanel" class="tab-pane fade" id="profile">Dudek</div>
+      <div role="tabpanel" class="tab-pane fade" id="messages">Pouet</div>
+    </div>
+  </div>
+{% endblock container %}
