@@ -1,10 +1,10 @@
 <?php
 
-namespace SocialWallBundle\Controller;
+namespace SocialWallBundle\Controller\Admin;
 
 use Facebook\FacebookAuthorizationException;
 use Facebook\FacebookRequestException;
-use Facebook\GraphPage;
+
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -14,18 +14,8 @@ use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Exception\TokenException;
 use SocialWallBundle\Entity\SocialMediaConfig\FacebookConfig;
 
-class AdminController extends Controller
+class FacebookController extends Controller
 {
-    /**
-     * @Route("/", name="admin_index")
-     */
-    public function indexAction()
-    {
-        return $this->render('::Admin/index.html.twig', [
-            'facebookPages' => $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->findAll()
-        ]);
-    }
-
     /**
      * @Route("/subscribe/facebook", name="admin_facebook_subscribe")
      * @Method({"POST"})

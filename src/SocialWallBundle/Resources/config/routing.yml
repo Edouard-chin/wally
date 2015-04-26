@@ -3,6 +3,11 @@ social_wall_default:
     type:     annotation
 
 social_wall_admin:
-    resource: "@SocialWallBundle/Controller/AdminController.php"
+    resource: "@SocialWallBundle/Controller/Admin/DefaultController.php"
     type:     annotation
     prefix:   /admin
+
+social_wall_admin_facebook:
+    resource: "@SocialWallBundle/Controller/Admin/FacebookController.php"
+    type:     annotation
+    prefix:   /admin/facebook

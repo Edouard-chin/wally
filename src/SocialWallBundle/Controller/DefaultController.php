@@ -2,6 +2,7 @@
 
 namespace SocialWallBundle\Controller;
 
+use Facebook\FacebookRequestException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -42,24 +43,18 @@ class DefaultController extends Controller
         $facebookHelper = $this->get('facebook_helper');
 
         try {
-            $page = $facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true));
-            if (!is_object($page)) {
-                return $this->redirectToRoute('render_social_urls');
+            $facebookSession = $facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true));
+            if (!is_object($facebookSession)) {
+                return $this->redirectToRoute('admin_index');
             }
-            $em = $this->getDoctrine()->getManager();
-            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $page->getProperty('access_token'));
-            $em->flush();
-            $this->addFlash('success', "Vous êtes bien identifié.");
-            $dispatcher = $this->get('event_dispatcher');
-            $event = new FacebookEvent($page->getProperty('access_token'), 'import');
-            $dispatcher->dispatch(SocialMediaEvent::FACEBOOK_NEW_DATA, $event);
-        } catch (OAuthException $e) {
-            $this->addFlash('error', $e->getMessage());
+            $this->get('session')->set('user_access_token', $facebookSession->getToken());
+        } catch (FacebookRequestException $e) {
+            $this->addFlash('error', "Une erreur est survenue lors de la connextion à facebook. Code d'erreur: {$e->getHttpStatusCode()}");
         } catch (\Exception $e) {
-            $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
+            $this->addFlash('error', 'Nous n\'avons pas pu vous identifier, merci de rééssayer.');
         }
 
-        return new Response();
+        return $this->redirectToRoute('admin_index');
     }
 
     /**
