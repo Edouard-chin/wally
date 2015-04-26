@@ -10,6 +10,7 @@ use Facebook\FacebookAuthorizationException;
 use Facebook\GraphUser;
 
 use SocialWallBundle\Exception\OAuthException;
+use SocialWallBundle\Exception\TokenException;
 use SocialWallBundle\Facebook\FacebookRedirectLoginHelper;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -108,7 +109,11 @@ class FacebookHelper extends SocialMediaHelper
      */
     public function oAuthHandler($url, Request $request = null)
     {
-        $helper = new FacebookRedirectLoginHelper($url, $this->session);
+        try {
+            $helper = new FacebookRedirectLoginHelper($url, $this->session);
+        } catch (FacebookRequestException $e) {
+            return false;
+        }
 
         return $helper->getSessionFromRedirect() ?: $helper->getLoginUrl(['public_profile,email,manage_pages']);
     }
@@ -116,22 +121,39 @@ class FacebookHelper extends SocialMediaHelper
     public function addSubscription($userAccessToken, $callbackUrl, $pageName)
     {
         if (!(new AccessToken($userAccessToken))->isValid()) {
-            throw new FacebookAuthorizationException();
+            throw new TokenException();
         }
-        $session = new FacebookSession($userAccessToken);
-        $pages = (new FacebookRequest(
-            $session,
+        if (false === $page = $this->getPageInfo($userAccessToken, $pageName)) {
+            throw new OAuthException("Unable to get the defails for the page: {$pageName}");
+        }
+        $userPages = (new FacebookRequest(
+            new FacebookSession($userAccessToken),
             'GET',
             "/me/accounts"
         ))->execute()->getGraphObjectList(\Facebook\GraphPage::className());
-        foreach ($pages as $page) {
-            if ($page->getId() == getPageInfo($userAccessToken, $pageName)->getId()) {
-                $this->subscribeToPage($page->getProperty('access_token'), $page->getId(), $callbackUrl);
-                return $page;
+        foreach ($userPages as $userPage) {
+            if ($userPage->getId() == $page->getId()) {
+                try {
+                    $this->subscribeToPage($userPage->getProperty('access_token'), $userPage->getId(), $callbackUrl);
+                } catch (FacebookAuthorizationException $e) {
+                    throw new OAuthException("There was a problem trying to subscribe to the page. Error code: {$e->getHttpStatusCode()}");
+                }
+                return $userPage;
             }
         }
 
-        throw new OAuthException("You are not the admin of the page: {$page}");
+        throw new OAuthException("You are not the admin of the page: {$pageName}");
+    }
+
+    public function removeSubscription($pageId)
+    {
+        $request = (new FacebookRequest(
+            new FacebookSession($this->fbAppToken),
+            'DELETE',
+            "/{$pageId}/subscribed_apps"
+        ))->execute()->getGraphObject();
+
+        return $request->getProperty('success');
     }
 
     public function getPageInfo($token, $pageName)
@@ -157,18 +179,16 @@ class FacebookHelper extends SocialMediaHelper
      */
     private function subscribeToPage($pageToken, $pageId, $callbackUrl)
     {
-        $pageSession = new FacebookSession($pageToken);
         $subscription = (new FacebookRequest(
-            $pageSession,
+            new FacebookSession($pageToken),
             'POST',
             "/{$pageId}/subscribed_apps"
         ))->execute()->getGraphObject();
         if ($subscription->getProperty('success')) {
-            $appSession = new FacebookSession($this->fbAppToken);
-            $realTimeUpdate = (new FacebookRequest(
-                $appSession,
+            (new FacebookRequest(
+                new FacebookSession($this->fbAppToken),
                 'POST',
-                '/' . $pageId . '/subscriptions',
+                "/{$pageId}/subscriptions",
                 [
                     'object' => 'page',
                     'callback_url' => $callbackUrl,
