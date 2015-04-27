@@ -7,10 +7,10 @@ use Facebook\FacebookSession;
 use Facebook\FacebookRequest;
 use Facebook\FacebookRequestException;
 use Facebook\FacebookAuthorizationException;
-use Facebook\GraphUser;
 
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Exception\TokenException;
+use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Facebook\FacebookRedirectLoginHelper;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -18,13 +18,6 @@ use Symfony\Component\HttpFoundation\Session\Session;
 
 class FacebookHelper extends SocialMediaHelper
 {
-    static $item = [
-        'photo',
-        'post',
-        'status',
-        'comment'
-    ];
-
     private $fbAppToken;
     private $session;
 
@@ -37,71 +30,48 @@ class FacebookHelper extends SocialMediaHelper
     }
 
     /**
-     * @param string $pageToken   The access token of the page
-     * @param string $datas       JSON encoded datas
+     * @param string $datas           JSON encoded datas
+     * @return array FacebookPost
      */
-    public function retrieveMessageFromData($pageToken, $datas)
+    public function updateHandler($datas)
     {
-        $session = new FacebookSession($pageToken);
-        $newMessages = [];
-        $datas = json_decode($datas, true);
-        foreach ($datas['entry'] as $v) {
-            foreach ($v['changes'] as $change) {
-                if (!in_array($change['value']['item'], self::$item) || $change['value']['verb'] != 'add') {
-                    continue ;
-                }
-                $postId = array_key_exists('post_id', $change['value']) ? $change['value']['post_id'] : $change['value']['comment_id'];
-                try {
-                    $post = (new FacebookRequest(
-                        $session,
-                        'GET',
-                        "/{$postId}"
-                    ))->execute()->getGraphObject();
-                } catch (FacebookRequestException $e) {
-                    continue;
-                }
-
-                $message = $post->getProperty('message');
-                if (!$message) {
-                    continue;
-                }
-                $newMessages[] = [
-                    'message' => $message,
-                    'created' => (new \DateTime('@' . $v['time']))->setTimeZone(new \DateTimeZone('Europe/Paris')),
-                ];
-            }
-        }
-
-        return $newMessages;
-    }
-
-    public function getOlderPosts($pageToken)
-    {
-        $session = new FacebookSession($pageToken);
-        $pageId = (new FacebookRequest(
-            $session,
-            'GET',
-            "/debug_token",
-            ['input_token' => $pageToken]
-        ))->execute()->getGraphObject()->getProperty('profile_id');
-        $messages = [];
-        $posts = (new FacebookRequest(
-            $session,
-            'GET',
-            '/' . $pageId . '/feed'
-        ))->execute()->getGraphObjectList();
-        foreach ($posts as $v) {
-            $message = $v->getProperty('message');
-            if (!$message) {
+        $posts = [];
+        $datas = json_decode($datas);
+        foreach ($datas->entry as $v) {
+            $feed = $v->changes[0]->value;
+            if (!isset($feed->message)) {
                 continue;
             }
-            $newMessages[] = [
-                'message' => $v->getProperty('message'),
-                'created' => (new \DateTime($v->getProperty('created_time')))->setTimeZone(new \DateTimeZone('Europe/Paris')),
-            ];
+            $posts[] = $this->createPostEntities(
+                $feed->message,
+                (new \DateTime('@'.$v->time))->setTimeZone(new \DateTimeZone('Europe/Paris')),
+                $feed->sender_name
+            );
         }
 
-        return $newMessages;
+        return $posts;
+    }
+
+    /**
+     *  @param  string       $token      A facebook AccessToken, can be a page or user token
+     *  @param  string       $pageName   The name of the FB page to fetch data from
+     *  @param  FacebookPost $lastPost
+     *  @return array FacebookPost
+     */
+    public function manualFetch($token, $pageName, FacebookPost $lastPost = null)
+    {
+        if (false === $page = $this->getPageInfo($token, $pageName)) {
+            throw new OAuthException("Unable to get the details for the page: {$pageName}");
+        }
+        $request = new FacebookRequest(
+            new FacebookSession($token),
+            'GET',
+            "/{$page->getId()}/feed",
+            ['limit' => 250, 'since' => $lastPost ? $lastPost->getCreated()->getTimestamp() : null]
+        );
+        $posts = $this->recursiveFetch([], $request);
+
+        return $posts;
     }
 
     /**
@@ -109,27 +79,28 @@ class FacebookHelper extends SocialMediaHelper
      */
     public function oAuthHandler($url, Request $request = null)
     {
-        try {
-            $helper = new FacebookRedirectLoginHelper($url, $this->session);
-        } catch (FacebookRequestException $e) {
-            return false;
-        }
+        $helper = new FacebookRedirectLoginHelper($url, $this->session);
 
         return $helper->getSessionFromRedirect() ?: $helper->getLoginUrl(['public_profile,email,manage_pages']);
     }
 
+    /**
+     * @param string $userAccessToken    A Facebook User Access Token
+     * @param string $callbackUrl        The url where facebook will send data to
+     * @param string $pageName           The name of facebook page to subscribe to
+     */
     public function addSubscription($userAccessToken, $callbackUrl, $pageName)
     {
         if (!(new AccessToken($userAccessToken))->isValid()) {
             throw new TokenException();
         }
         if (false === $page = $this->getPageInfo($userAccessToken, $pageName)) {
-            throw new OAuthException("Unable to get the defails for the page: {$pageName}");
+            throw new OAuthException("Unable to get the details for the page: {$pageName}");
         }
         $userPages = (new FacebookRequest(
             new FacebookSession($userAccessToken),
             'GET',
-            "/me/accounts"
+            '/me/accounts'
         ))->execute()->getGraphObjectList(\Facebook\GraphPage::className());
         foreach ($userPages as $userPage) {
             if ($userPage->getId() == $page->getId()) {
@@ -145,6 +116,10 @@ class FacebookHelper extends SocialMediaHelper
         throw new OAuthException("You are not the admin of the page: {$pageName}");
     }
 
+    /**
+     * @param string $pageId       The facebook pageId
+     * @return boolean
+     */
     public function removeSubscription($pageId)
     {
         $request = (new FacebookRequest(
@@ -156,6 +131,11 @@ class FacebookHelper extends SocialMediaHelper
         return $request->getProperty('success');
     }
 
+    /**
+     * @param string $token      A facebook access token
+     * @param string $pageName   The name of the facebook page
+     * @return GraphPage
+     */
     public function getPageInfo($token, $pageName)
     {
         try {
@@ -197,5 +177,35 @@ class FacebookHelper extends SocialMediaHelper
                 ]
             ))->execute()->getGraphObject();
         }
+    }
+
+    private function recursiveFetch(array $posts, FacebookRequest $request)
+    {
+        $response = $request->execute();
+        $data = $response->getGraphObjectList();
+        foreach ($data as $v) {
+            if (!$message = $v->getProperty('message')) {
+                continue;
+            }
+            $posts[] = $this->createPostEntities(
+                $message,
+                (new \DateTime($v->getProperty('created_time')))->setTimeZone(new \DateTimeZone('Europe/Paris')),
+                $v->getProperty('from')->getProperty('name')
+            );
+        }
+        if ($nextRequest = $response->getRequestForNextPage()) {
+            $this->recursiveFetch($posts, $nextRequest);
+        }
+
+        return $posts;
+    }
+
+    private function createPostEntities($message, \DateTime $created, $authorUsername)
+    {
+        return (new FacebookPost())
+            ->setMessage($message)
+            ->setCreated($created)
+            ->setAuthorUsername($authorUsername)
+        ;
     }
 }
