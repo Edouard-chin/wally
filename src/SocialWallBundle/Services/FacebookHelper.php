@@ -18,14 +18,13 @@ use Symfony\Component\HttpFoundation\Session\Session;
 
 class FacebookHelper extends SocialMediaHelper
 {
-    private $fbAppToken;
+    private $appToken;
     private $session;
 
-    public function __construct($fbId, $fbSecret, $fbAppToken, Session $session)
+    public function __construct($appId, $appSecret, $appToken, Session $session)
     {
-        FacebookSession::setDefaultApplication($fbId, $fbSecret);
-        $this->fbAppToken = $fbAppToken;
-        $this->setAppSecret($fbSecret);
+        FacebookSession::setDefaultApplication($appId, $appSecret);
+        $this->appToken = $appToken;
         $this->session = $session;
     }
 
@@ -123,7 +122,7 @@ class FacebookHelper extends SocialMediaHelper
     public function removeSubscription($pageId)
     {
         $request = (new FacebookRequest(
-            new FacebookSession($this->fbAppToken),
+            new FacebookSession($this->appToken),
             'DELETE',
             "/{$pageId}/subscribed_apps"
         ))->execute()->getGraphObject();
@@ -166,7 +165,7 @@ class FacebookHelper extends SocialMediaHelper
         ))->execute()->getGraphObject();
         if ($subscription->getProperty('success')) {
             (new FacebookRequest(
-                new FacebookSession($this->fbAppToken),
+                new FacebookSession($this->appToken),
                 'POST',
                 "/{$pageId}/subscriptions",
                 [
