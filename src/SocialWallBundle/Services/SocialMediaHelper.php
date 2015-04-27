@@ -49,7 +49,7 @@ abstract class SocialMediaHelper
     {
         if ($request->query->get('hub_verify_token') == $this->symfonySecret) {
             $response->setContent($request->query->get('hub_challenge'));
-            return $response;
+            return true;
         }
 
         return false;

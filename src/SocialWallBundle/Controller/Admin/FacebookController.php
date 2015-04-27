@@ -17,6 +17,28 @@ use SocialWallBundle\Entity\SocialMediaConfig\FacebookConfig;
 class FacebookController extends Controller
 {
     /**
+     * @Route("/facebook/login", name="admin_facebook_login")
+     */
+    public function facebookLoginAction()
+    {
+        $facebookHelper = $this->get('facebook_helper');
+
+        try {
+            $facebookSession = $facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true));
+            if (!is_object($facebookSession)) {
+                return $this->redirectToRoute('admin_index');
+            }
+            $this->get('session')->set('user_access_token', $facebookSession->getToken());
+        } catch (FacebookRequestException $e) {
+            $this->addFlash('error', "Une erreur est survenue lors de la connextion à facebook. Code d'erreur: {$e->getHttpStatusCode()}");
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Nous n\'avons pas pu vous identifier, merci de rééssayer.');
+        }
+
+        return $this->redirectToRoute('admin_index');
+    }
+
+    /**
      * @Route("/subscribe/facebook", name="admin_facebook_subscribe")
      * @Method({"POST"})
      */
@@ -24,7 +46,7 @@ class FacebookController extends Controller
     {
         $facebookHelper = $this->get('facebook_helper');
         if (!$accessToken = $this->get('session')->get('user_access_token')) {
-            $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true)).'">Clique</a>');
+            $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');
         } else {
             try {
                 $page = $facebookHelper->addSubscription($accessToken, $this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'));
@@ -32,7 +54,7 @@ class FacebookController extends Controller
                 $this->addFlash('success', "Vous souscrivez maintenant à la page: {$pageName}");
             } catch (TokenException $e) {
                 $this->get('session')->remove('user_access_token');
-                $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true)).'">Clique</a>');
+                $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');
             } catch (FacebookAuthorizationException $e) {
                 $this->addFlash('error', 'Something wrong happened');
             } catch (OAuthException $e) {

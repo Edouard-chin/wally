@@ -8,6 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Event\InstagramEvent;
@@ -18,45 +19,6 @@ use SocialWallBundle\SocialMediaType;
 
 class DefaultController extends Controller
 {
-    /**
-     * @Route("/social/urls", name="render_social_urls")
-     */
-    public function renderSocialUrlsAction(Request $request)
-    {
-        $instagramHelper = $this->get('instagram_helper');
-        $facebookHelper = $this->get('facebook_helper');
-
-        $fbUrl = $facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true));
-        $instagramUrl = $instagramHelper->oAuthHandler($this->generateUrl('instagram_login', [], true), $request);
-
-        return $this->render('SocialWallBundle:Default:index.html.twig', [
-            'facebookUrl' => $fbUrl,
-            'instagramUrl' => $instagramUrl,
-        ]);
-    }
-
-    /**
-     * @Route("/facebook/login", name="facebook_login")
-     */
-    public function facebookLoginAction()
-    {
-        $facebookHelper = $this->get('facebook_helper');
-
-        try {
-            $facebookSession = $facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true));
-            if (!is_object($facebookSession)) {
-                return $this->redirectToRoute('admin_index');
-            }
-            $this->get('session')->set('user_access_token', $facebookSession->getToken());
-        } catch (FacebookRequestException $e) {
-            $this->addFlash('error', "Une erreur est survenue lors de la connextion à facebook. Code d'erreur: {$e->getHttpStatusCode()}");
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Nous n\'avons pas pu vous identifier, merci de rééssayer.');
-        }
-
-        return $this->redirectToRoute('admin_index');
-    }
-
     /**
      * @Route("/instagram/login", name="instagram_login")
      */
@@ -97,11 +59,14 @@ class DefaultController extends Controller
         if ($request->getMethod() == "GET" && $facebookHelper->responseToSubscription($request, $response)) {
             return $response;
         } elseif ($request->getMethod() == "POST" && $facebookHelper->checkPayloadSignature($request, "sha1=")) {
-            $em = $this->getDoctrine()->getManager();
-            $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => SocialMediaType::FACEBOOK]);
-            $dispatcher = $this->get('event_dispatcher');
-            $event = new FacebookEvent($pageToken->getToken(), 'fetch', $request->getContent());
-            $dispatcher->dispatch(SocialMediaEvent::FACEBOOK_NEW_DATA, $event);
+            return new StreamedResponse(function () use ($request, $facebookHelper) {
+                $em = $this->getDoctrine()->getManager();
+                $posts = $facebookHelper->updateHandler($request->getContent());
+                foreach ($posts as $post) {
+                    $em->persist($post);
+                }
+                $em->flush();
+            });
         }
 
         return $response;
