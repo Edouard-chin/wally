@@ -5,6 +5,7 @@ parameters:
     facebook_listener.class: "SocialWallBundle\EventListener\FacebookListener"
     faye_curl_adapter.class: "Nc\FayeClient\Adapter\CurlAdapter"
     faye_client.class: "Nc\FayeClient\Client"
+    social_media_listener.class: "SocialWallBundle\EventListener\SocialMediaListener"
 
 services:
     social_media_helper:
@@ -40,3 +41,9 @@ services:
     faye_client:
         class: "%faye_client.class%"
         arguments: [ @faye_curl_adapter, "http://localhost:3000" ]
+
+    social_media_listener:
+        class: "%social_media_listener.class%"
+        arguments: [ @facebook_helper, @faye_client ]
+        tags:
+            - { name: doctrine.orm.entity_listener }
