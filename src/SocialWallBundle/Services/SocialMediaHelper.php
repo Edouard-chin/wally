@@ -5,6 +5,11 @@ namespace SocialWallBundle\Services;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+
+use SocialWallBundle\Entity\SocialMediaPost;
 
 abstract class SocialMediaHelper
 {
@@ -42,7 +47,7 @@ abstract class SocialMediaHelper
     }
 
     /**
-     * @param Request $request
+     * @param Request  $request
      * @param Response $response
      */
     public function responseToSubscription(Request $request, Response $response)
@@ -53,5 +58,24 @@ abstract class SocialMediaHelper
         }
 
         return false;
+    }
+
+    /**
+     * @param  SocialMediaPost  $post   An instance of SocialMediaPost
+     * @return string                   Json encoded datas
+     */
+    public function serializeEntity(SocialMediaPost $post)
+    {
+        $normalizer = (new GetSetMethodNormalizer())
+            ->setIgnoredAttributes(['retrieved'])
+            ->setCallbacks([
+                'created' => function ($value) {
+                    return $value instanceof \DateTime ? $value->format('d-m-Y h:i') : '';
+                }
+            ])
+        ;
+        $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
+
+        return $serializer->serialize($post, 'json');
     }
 }
