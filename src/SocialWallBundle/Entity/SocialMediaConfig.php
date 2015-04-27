@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * SocialMediaConfig
  *
+ * @ORM\Entity
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({
@@ -14,7 +15,6 @@ use Doctrine\ORM\Mapping as ORM;
  *   "twitter"   = "SocialWallBundle\Entity\SocialMediaConfig\TwitterConfig",
  *   "instagram" = "SocialWallBundle\Entity\SocialMediaConfig\InstagramConfig",
  * })
- * @ORM\Entity
  */
 abstract class SocialMediaConfig
 {
