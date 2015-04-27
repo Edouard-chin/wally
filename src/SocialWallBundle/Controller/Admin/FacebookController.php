@@ -9,6 +9,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Exception\TokenException;
@@ -17,7 +18,7 @@ use SocialWallBundle\Entity\SocialMediaConfig\FacebookConfig;
 class FacebookController extends Controller
 {
     /**
-     * @Route("/facebook/login", name="admin_facebook_login")
+     * @Route("/login", name="admin_facebook_login")
      */
     public function facebookLoginAction()
     {
@@ -39,7 +40,7 @@ class FacebookController extends Controller
     }
 
     /**
-     * @Route("/subscribe/facebook", name="admin_facebook_subscribe")
+     * @Route("/subscribe", name="admin_facebook_subscribe")
      * @Method({"POST"})
      */
     public function addFacebookSubscriptionAction(Request $request)
@@ -66,7 +67,7 @@ class FacebookController extends Controller
     }
 
     /**
-     * @Route("/unsubscribe/facebook/{pageName}", name="admin_facebook_unsubscribe")
+     * @Route("/unsubscribe/{pageName}", name="admin_facebook_unsubscribe")
      * @Method({"DELETE", "POST"})
      */
     public function removeFacebookSubscriptionAction(Request $request, FacebookConfig $config)
@@ -86,5 +87,22 @@ class FacebookController extends Controller
         }
 
         return $this->redirectToRoute('admin_index');
+    }
+
+    /**
+     * @Route("/import/{pageName}", name="admin_facebook_import")
+     */
+    public function importAction(FacebookConfig $page)
+    {
+        $facebookHelper = $this->get('facebook_helper');
+        $posts = $facebookHelper->manualFetch($page->getToken(), $page->getPageId());
+        $em = $this->getDoctrine()->getManager();
+        foreach ($posts as $post) {
+            usleep(25000);
+            $em->persist($post);
+        }
+        $em->flush();
+
+        return new JsonResponse(['success' => true]);
     }
 }

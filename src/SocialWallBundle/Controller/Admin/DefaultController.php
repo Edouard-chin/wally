@@ -15,7 +15,7 @@ class DefaultController extends Controller
     {
         $facebookHelper = $this->get('facebook_helper');
         if (!$this->get('session')->get('user_access_token')) {
-            $this->addFlash('success', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('facebook_login', [], true)).'">Clique</a>');
+            $this->addFlash('success', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');
         }
 
         return $this->render('::Admin/index.html.twig', [
