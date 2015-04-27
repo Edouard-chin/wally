@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\Response;
 abstract class SocialMediaHelper
 {
     protected $appSecret;
-    protected $router;
     protected $symfonySecret;
 
     abstract public function oAuthHandler($url, Request $request = null);
@@ -20,14 +19,6 @@ abstract class SocialMediaHelper
     public function setAppSecret($appSecret)
     {
         $this->appSecret = $appSecret;
-    }
-
-    /**
-     * @param Router $router
-     */
-    public function setRouter(Router $router)
-    {
-        $this->router = $router;
     }
 
     /**
@@ -58,7 +49,7 @@ abstract class SocialMediaHelper
     {
         if ($request->query->get('hub_verify_token') == $this->symfonySecret) {
             $response->setContent($request->query->get('hub_challenge'));
-            return $response;
+            return true;
         }
 
         return false;

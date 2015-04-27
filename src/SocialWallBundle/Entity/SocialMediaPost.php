@@ -29,7 +29,7 @@ abstract class SocialMediaPost
     private $visible = false;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", nullable=true)
      */
     private $message;
 

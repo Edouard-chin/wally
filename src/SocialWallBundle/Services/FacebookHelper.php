@@ -2,12 +2,15 @@
 
 namespace SocialWallBundle\Services;
 
+use Facebook\Entities\AccessToken;
 use Facebook\FacebookSession;
 use Facebook\FacebookRequest;
 use Facebook\FacebookRequestException;
-use Facebook\GraphUser;
+use Facebook\FacebookAuthorizationException;
 
 use SocialWallBundle\Exception\OAuthException;
+use SocialWallBundle\Exception\TokenException;
+use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Facebook\FacebookRedirectLoginHelper;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -15,126 +18,136 @@ use Symfony\Component\HttpFoundation\Session\Session;
 
 class FacebookHelper extends SocialMediaHelper
 {
-    static $item = [
-        'photo',
-        'post',
-        'status',
-        'comment'
-    ];
-
-    private $fbAppToken;
+    private $appToken;
     private $session;
-    private $fbPageName;
 
-    public function __construct($fbId, $fbSecret, $fbAppToken, Session $session, $fbPageName)
+    public function __construct($appId, $appSecret, $appToken, Session $session)
     {
-        FacebookSession::setDefaultApplication($fbId, $fbSecret);
-        $this->fbAppToken = $fbAppToken;
-        $this->setAppSecret($fbSecret);
+        FacebookSession::setDefaultApplication($appId, $appSecret);
+        $this->appToken = $appToken;
         $this->session = $session;
-        $this->fbPageName = $fbPageName;
     }
 
     /**
-     * @param string $pageToken   The access token of the page
-     * @param string $datas       JSON encoded datas
+     * @param string $datas           JSON encoded datas
+     * @return array FacebookPost
      */
-    public function retrieveMessageFromData($pageToken, $datas)
+    public function updateHandler($datas)
     {
-        $session = new FacebookSession($pageToken);
-        $newMessages = [];
-        $datas = json_decode($datas, true);
-        foreach ($datas['entry'] as $v) {
-            foreach ($v['changes'] as $change) {
-                if (!in_array($change['value']['item'], self::$item) || $change['value']['verb'] != 'add') {
-                    continue ;
-                }
-                $postId = array_key_exists('post_id', $change['value']) ? $change['value']['post_id'] : $change['value']['comment_id'];
-                try {
-                    $post = (new FacebookRequest(
-                        $session,
-                        'GET',
-                        "/{$postId}"
-                    ))->execute()->getGraphObject();
-                } catch (FacebookRequestException $e) {
-                    continue;
-                }
-
-                $message = $post->getProperty('message');
-                if (!$message) {
-                    continue;
-                }
-                $newMessages[] = [
-                    'message' => $message,
-                    'created' => (new \DateTime('@' . $v['time']))->setTimeZone(new \DateTimeZone('Europe/Paris')),
-                ];
-            }
-        }
-
-        return $newMessages;
-    }
-
-    public function getOlderPosts($pageToken)
-    {
-        $session = new FacebookSession($pageToken);
-        $pageId = (new FacebookRequest(
-            $session,
-            'GET',
-            "/debug_token",
-            ['input_token' => $pageToken]
-        ))->execute()->getGraphObject()->getProperty('profile_id');
-        $messages = [];
-        $posts = (new FacebookRequest(
-            $session,
-            'GET',
-            '/' . $pageId . '/feed'
-        ))->execute()->getGraphObjectList();
-        foreach ($posts as $v) {
-            $message = $v->getProperty('message');
-            if (!$message) {
+        $posts = [];
+        $datas = json_decode($datas);
+        foreach ($datas->entry as $v) {
+            $feed = $v->changes[0]->value;
+            if (!isset($feed->message)) {
                 continue;
             }
-            $newMessages[] = [
-                'message' => $v->getProperty('message'),
-                'created' => (new \DateTime($v->getProperty('created_time')))->setTimeZone(new \DateTimeZone('Europe/Paris')),
-            ];
+            $posts[] = $this->createPostEntities(
+                $feed->message,
+                (new \DateTime('@'.$v->time))->setTimeZone(new \DateTimeZone('Europe/Paris')),
+                $feed->sender_name
+            );
         }
 
-        return $newMessages;
+        return $posts;
     }
 
     /**
-     * Admin of a facebook page needs to grant our application to manage his pages.
-     * Once done, the subscribeToPage function will make a request to the FB api to get realtime
-     * notification when events occurs on the page.
-     *
+     *  @param  string       $token      A facebook AccessToken, can be a page or user token
+     *  @param  string       $pageName   The name of the FB page to fetch data from
+     *  @param  FacebookPost $lastPost
+     *  @return array FacebookPost
+     */
+    public function manualFetch($token, $pageName, FacebookPost $lastPost = null)
+    {
+        if (false === $page = $this->getPageInfo($token, $pageName)) {
+            throw new OAuthException("Unable to get the details for the page: {$pageName}");
+        }
+        $request = new FacebookRequest(
+            new FacebookSession($token),
+            'GET',
+            "/{$page->getId()}/feed",
+            ['limit' => 250, 'since' => $lastPost ? $lastPost->getCreated()->getTimestamp() : null]
+        );
+        $posts = $this->recursiveFetch([], $request);
+
+        return $posts;
+    }
+
+    /**
      * @param string $url   An url for facebook callback
      */
     public function oAuthHandler($url, Request $request = null)
     {
         $helper = new FacebookRedirectLoginHelper($url, $this->session);
-        $session = $helper->getSessionFromRedirect();
-        if ($session) {
-            $userId = (new FacebookRequest(
-                $session,
-                'GET',
-                '/me'
-            ))->execute()->getGraphObject(GraphUser::className())->getId();
-            $pages = (new FacebookRequest(
-                $session,
-                'GET',
-                "/{$userId}/accounts"
-            ))->execute()->getGraphObjectList();
-            foreach ($pages as $v) {
-                if ($v->getProperty('name') == $this->fbPageName) {
-                    $this->subscribeToPage($v->getProperty('access_token'), $v->getProperty('id'));
-                    return $v;
+
+        return $helper->getSessionFromRedirect() ?: $helper->getLoginUrl(['public_profile,email,manage_pages']);
+    }
+
+    /**
+     * @param string $userAccessToken    A Facebook User Access Token
+     * @param string $callbackUrl        The url where facebook will send data to
+     * @param string $pageName           The name of facebook page to subscribe to
+     */
+    public function addSubscription($userAccessToken, $callbackUrl, $pageName)
+    {
+        if (!(new AccessToken($userAccessToken))->isValid()) {
+            throw new TokenException();
+        }
+        if (false === $page = $this->getPageInfo($userAccessToken, $pageName)) {
+            throw new OAuthException("Unable to get the details for the page: {$pageName}");
+        }
+        $userPages = (new FacebookRequest(
+            new FacebookSession($userAccessToken),
+            'GET',
+            '/me/accounts'
+        ))->execute()->getGraphObjectList(\Facebook\GraphPage::className());
+        foreach ($userPages as $userPage) {
+            if ($userPage->getId() == $page->getId()) {
+                try {
+                    $this->subscribeToPage($userPage->getProperty('access_token'), $userPage->getId(), $callbackUrl);
+                } catch (FacebookAuthorizationException $e) {
+                    throw new OAuthException("There was a problem trying to subscribe to the page. Error code: {$e->getHttpStatusCode()}");
                 }
+                return $userPage;
             }
-            throw new OAuthException('You are not the admin of the page: ' . $this->fbPageName);
         }
 
-        return $helper->getLoginUrl(['public_profile,email,manage_pages']);
+        throw new OAuthException("You are not the admin of the page: {$pageName}");
+    }
+
+    /**
+     * @param string $pageId       The facebook pageId
+     * @return boolean
+     */
+    public function removeSubscription($pageId)
+    {
+        $request = (new FacebookRequest(
+            new FacebookSession($this->appToken),
+            'DELETE',
+            "/{$pageId}/subscribed_apps"
+        ))->execute()->getGraphObject();
+
+        return $request->getProperty('success');
+    }
+
+    /**
+     * @param string $token      A facebook access token
+     * @param string $pageName   The name of the facebook page
+     * @return GraphPage
+     */
+    public function getPageInfo($token, $pageName)
+    {
+        try {
+            $page = (new FacebookRequest(
+                new FacebookSession($token),
+                'GET',
+                "/{$pageName}"
+            ))->execute()->getGraphObject(\Facebook\GraphPage::className());
+        } catch (FacebookAuthorizationException $e) {
+            return false;
+        }
+
+        return $page;
     }
 
     /**
@@ -143,27 +156,55 @@ class FacebookHelper extends SocialMediaHelper
      *
      * @param string $pageToken    The access token of the page
      */
-    private function subscribeToPage($pageToken, $pageId)
+    private function subscribeToPage($pageToken, $pageId, $callbackUrl)
     {
-        $pageSession = new FacebookSession($pageToken);
         $subscription = (new FacebookRequest(
-            $pageSession,
+            new FacebookSession($pageToken),
             'POST',
-            '/' . $pageId . '/subscribed_apps'
+            "/{$pageId}/subscribed_apps"
         ))->execute()->getGraphObject();
         if ($subscription->getProperty('success')) {
-            $appSession = new FacebookSession($this->fbAppToken);
-            $realTimeUpdate = (new FacebookRequest(
-                $appSession,
+            (new FacebookRequest(
+                new FacebookSession($this->appToken),
                 'POST',
-                '/' . $pageId . '/subscriptions',
+                "/{$pageId}/subscriptions",
                 [
                     'object' => 'page',
-                    'callback_url' => $this->router->generate('social_wall_facebook_real_time_update', [], true),
+                    'callback_url' => $callbackUrl,
                     'fields' => 'feed',
                     'verify_token' => $this->symfonySecret,
                 ]
             ))->execute()->getGraphObject();
         }
+    }
+
+    private function recursiveFetch(array $posts, FacebookRequest $request)
+    {
+        $response = $request->execute();
+        $data = $response->getGraphObjectList();
+        foreach ($data as $v) {
+            if (!$message = $v->getProperty('message')) {
+                continue;
+            }
+            $posts[] = $this->createPostEntities(
+                $message,
+                (new \DateTime($v->getProperty('created_time')))->setTimeZone(new \DateTimeZone('Europe/Paris')),
+                $v->getProperty('from')->getProperty('name')
+            );
+        }
+        if ($nextRequest = $response->getRequestForNextPage()) {
+            $this->recursiveFetch($posts, $nextRequest);
+        }
+
+        return $posts;
+    }
+
+    private function createPostEntities($message, \DateTime $created, $authorUsername)
+    {
+        return (new FacebookPost())
+            ->setMessage($message)
+            ->setCreated($created)
+            ->setAuthorUsername($authorUsername)
+        ;
     }
 }

@@ -7,10 +7,16 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * SocialMediaConfig
  *
- * @ORM\Table()
  * @ORM\Entity
+ * @ORM\InheritanceType("SINGLE_TABLE")
+ * @ORM\DiscriminatorColumn(name="type", type="string")
+ * @ORM\DiscriminatorMap({
+ *   "facebook"  = "SocialWallBundle\Entity\SocialMediaConfig\FacebookConfig",
+ *   "twitter"   = "SocialWallBundle\Entity\SocialMediaConfig\TwitterConfig",
+ *   "instagram" = "SocialWallBundle\Entity\SocialMediaConfig\InstagramConfig",
+ * })
  */
-class SocialMediaConfig
+abstract class SocialMediaConfig
 {
     /**
      * @var integer
@@ -22,16 +28,14 @@ class SocialMediaConfig
     private $id;
 
     /**
-     * @var array
-     *
-     * @ORM\Column(name="tags", type="simple_array")
+     * @ORM\Column(type="text", nullable=true)
      */
-    private $tags;
+    private $token;
 
     /**
-     * @ORM\Column(name="type", type="string", length=255)
+     * @return string
      */
-    private $type;
+    abstract public function getType();
 
     /**
      * @return integer
@@ -42,39 +46,20 @@ class SocialMediaConfig
     }
 
     /**
-     * @param array $tags
-     * @return SocialMediaConfig
-     */
-    public function setTags($tags)
-    {
-        $this->tags = $tags;
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getTags()
-    {
-        return $this->tags;
-    }
-
-    /**
      * @return string
      */
-    public function getType()
+    public function getToken()
     {
-        return $this->type;
+        return $this->token;
     }
 
     /**
-     * @param string $type
+     * @param string $token
      * @return this
      */
-    public function setType($type)
+    public function setToken($token)
     {
-        $this->type = $type;
+        $this->token = $token;
 
         return $this;
     }

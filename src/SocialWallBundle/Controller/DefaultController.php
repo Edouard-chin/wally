@@ -2,9 +2,13 @@
 
 namespace SocialWallBundle\Controller;
 
+use Facebook\FacebookRequestException;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
 use SocialWallBundle\Event\InstagramEvent;
@@ -15,53 +19,17 @@ use SocialWallBundle\SocialMediaType;
 
 class DefaultController extends Controller
 {
-    public function renderSocialUrlsAction(Request $request)
-    {
-        $instagramHelper = $this->get('instagram_helper');
-        $facebookHelper = $this->get('facebook_helper');
-
-        $fbUrl = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
-        $instagramUrl = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
-
-        return $this->render('SocialWallBundle:Default:index.html.twig', [
-            'facebookUrl' => $fbUrl,
-            'instagramUrl' => $instagramUrl,
-        ]);
-    }
-
-    public function facebookLoginAction()
-    {
-        $facebookHelper = $this->get('facebook_helper');
-
-        try {
-            $page = $facebookHelper->oAuthHandler($this->generateUrl('social_wall_facebook_login', [], true));
-            if (!is_object($page)) {
-                return $this->redirectToRoute('social_wall_render_social_urls');
-            }
-            $em = $this->getDoctrine()->getManager();
-            $em->getRepository('SocialWallBundle:AccessToken')->updateOrCreate(SocialMediaType::FACEBOOK, $page->getProperty('access_token'));
-            $em->flush();
-            $this->addFlash('success', "Vous êtes bien identifié.");
-            $dispatcher = $this->get('event_dispatcher');
-            $event = new FacebookEvent($page->getProperty('access_token'), 'import');
-            $dispatcher->dispatch(SocialMediaEvent::FACEBOOK_NEW_DATA, $event);
-        } catch (OAuthException $e) {
-            $this->addFlash('error', $e->getMessage());
-        } catch (\Exception $e) {
-            $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
-        }
-
-        return new Response();
-    }
-
+    /**
+     * @Route("/instagram/login", name="instagram_login")
+     */
     public function instagramLoginAction(Request $request)
     {
         $instagramHelper = $this->get('instagram_helper');
         try {
-            $accessToken = $instagramHelper->oAuthHandler($this->generateUrl('social_wall_instagram_login', [], true), $request);
+            $accessToken = $instagramHelper->oAuthHandler($this->generateUrl('instagram_login', [], true), $request);
         } catch (OAuthException $e) {
             $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
-            return $this->redirectToRoute('social_wall_render_social_urls');
+            return $this->redirectToRoute('render_social_urls');
         }
 
         $em = $this->getDoctrine()->getManager();
@@ -73,13 +41,16 @@ class DefaultController extends Controller
             $dispatcher->dispatch(SocialMediaEvent::INSTAGRAM_NEW_DATA, $event);
         }
         try {
-            $instagramHelper->setSubscriptions($this->generateUrl('social_wall_instagram_real_time_update', [], true), $tags);
+            $instagramHelper->setSubscriptions($this->generateUrl('instagram_real_time_update', [], true), $tags);
         } catch (OAuthException $e) {
             $this->addFlash('error', "Nous n'avons pas pu souscrire aux tags");
         }
         $this->addFlash('success', "Vous êtes bien identifié.");
     }
 
+    /**
+     * @Route("/facebook/realtime_update", name="facebook_real_time_update")
+     */
     public function facebookRealtimeAction(Request $request)
     {
         $response = new Response();
@@ -88,16 +59,22 @@ class DefaultController extends Controller
         if ($request->getMethod() == "GET" && $facebookHelper->responseToSubscription($request, $response)) {
             return $response;
         } elseif ($request->getMethod() == "POST" && $facebookHelper->checkPayloadSignature($request, "sha1=")) {
-            $em = $this->getDoctrine()->getManager();
-            $pageToken = $em->getRepository('SocialWallBundle:AccessToken')->findOneBy(['type' => SocialMediaType::FACEBOOK]);
-            $dispatcher = $this->get('event_dispatcher');
-            $event = new FacebookEvent($pageToken->getToken(), 'fetch', $request->getContent());
-            $dispatcher->dispatch(SocialMediaEvent::FACEBOOK_NEW_DATA, $event);
+            return new StreamedResponse(function () use ($request, $facebookHelper) {
+                $em = $this->getDoctrine()->getManager();
+                $posts = $facebookHelper->updateHandler($request->getContent());
+                foreach ($posts as $post) {
+                    $em->persist($post);
+                }
+                $em->flush();
+            });
         }
 
         return $response;
     }
 
+    /**
+     * @Route("/instagram/realtime_update", name="instagram_real_time_update")
+     */
     public function instagramRealTimeAction(Request $request)
     {
         $response = new Response();

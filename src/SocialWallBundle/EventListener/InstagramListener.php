@@ -8,6 +8,7 @@ use SocialWallBundle\Event\SocialMediaEvent;
 use SocialWallBundle\Event\InstagramEvent;
 use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
 use SocialWallBundle\Services\InstagramHelper;
+use Nc\FayeClient\Client;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -20,11 +21,13 @@ class InstagramListener implements EventSubscriberInterface
     private $om;
     private $token;
     private $lastMessage;
+    private $client;
 
-    public function __construct(InstagramHelper $instagramHelper, ObjectManager $om)
+    public function __construct(InstagramHelper $instagramHelper, ObjectManager $om, Client $client)
     {
         $this->instagramHelper = $instagramHelper;
         $this->om = $om;
+        $this->client = $client;
     }
 
     public static function getSubscribedEvents()
@@ -47,9 +50,10 @@ class InstagramListener implements EventSubscriberInterface
         if (empty($this->tag)) {
             return;
         }
-
+        $newMessages = [];
         foreach ($this->tag as $v) {
             foreach ($this->instagramHelper->searchForRecentTag($v, $this->token, $this->lastMessage) as $newPost) {
+                $newMessages[] = $newPost;
                 $this->om->persist((new InstagramPost())
                     ->setMessage($newPost['message'])
                     ->setCreated($newPost['created'])
@@ -59,6 +63,7 @@ class InstagramListener implements EventSubscriberInterface
                 );
             }
         }
+        $this->client->send('/social-feed', $newMessages);
         $this->tag = [];
         $this->om->flush();
     }
