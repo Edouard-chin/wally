@@ -1,0 +1,28 @@
+{
+  "name": "wally",
+  "version": "0.0.1",
+  "description": "Wally dependency",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Edouard-chin/wally.git"
+  },
+  "keywords": [
+    "wall",
+    "social",
+    "media",
+    "twitter",
+    "facebook"
+  ],
+  "author": "Edouard CHIN",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/Edouard-chin/wally/issues"
+  },
+  "dependencies": {
+    "faye": "~1.1.1"
+  }
+}

@@ -53,19 +53,16 @@ class FacebookHelper extends SocialMediaHelper
 
     /**
      *  @param  string       $token      A facebook AccessToken, can be a page or user token
-     *  @param  string       $pageName   The name of the FB page to fetch data from
+     *  @param  string       $pageId     The Id of the facebook page
      *  @param  FacebookPost $lastPost
      *  @return array FacebookPost
      */
-    public function manualFetch($token, $pageName, FacebookPost $lastPost = null)
+    public function manualFetch($token, $pageId, FacebookPost $lastPost = null)
     {
-        if (false === $page = $this->getPageInfo($token, $pageName)) {
-            throw new OAuthException("Unable to get the details for the page: {$pageName}");
-        }
         $request = new FacebookRequest(
             new FacebookSession($token),
             'GET',
-            "/{$page->getId()}/feed",
+            "/{$pageId}/feed",
             ['limit' => 250, 'since' => $lastPost ? $lastPost->getCreated()->getTimestamp() : null]
         );
         $posts = $this->recursiveFetch([], $request);
