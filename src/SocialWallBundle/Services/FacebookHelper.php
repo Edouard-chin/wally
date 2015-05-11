@@ -26,6 +26,7 @@ class FacebookHelper extends SocialMediaHelper
         FacebookSession::setDefaultApplication($appId, $appSecret);
         $this->appToken = $appToken;
         $this->session = $session;
+        $this->setAppSecret($appSecret);
     }
 
     /**
