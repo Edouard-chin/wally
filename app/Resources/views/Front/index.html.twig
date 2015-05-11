@@ -1,0 +1,37 @@
+{% extends '::base_admin.html.twig' %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" type="text/css" href="{{ asset('bundles/socialwall/css/front.css') }}" />
+{% endblock %}
+
+{% block container %}
+  <div id="social-post-container"></div>
+{% endblock %}
+{% block javascripts %}
+  <script type="text/javascript" src="{{ asset('bundles/socialwall/js/underscore.js') }}"></script>
+  <script type="text/javascript" src="{{ asset('bundles/socialwall/js/backbone.js') }}"></script>
+  <script type="text/template" id="post-template">
+    <%= message %>
+  </script>
+  <script type="text/javascript" src="{{ asset('bundles/socialwall/js/front.js') }}"></script>
+  <script type="text/javascript">
+    $(function () {
+      var client = new Faye.Client('http://localhost:3000/');
+      var collection = new App.Collections.SocialPosts([
+        {% for post in posts %}
+          {{ post|raw }},
+        {% endfor %}
+      ]);
+      var views = new App.Views.SocialPosts({collection: collection});
+      $("#social-post-container").append(views.el);
+      client.subscribe('/messages', function (post) {
+        var post = JSON.parse(post[0]);
+        collection.add(post);
+      });
+      // setInterval(function () {
+      //   views.trigger('cycle');
+      // }, 1000);
+    })
+  </script>
+{% endblock javascripts %}
+
