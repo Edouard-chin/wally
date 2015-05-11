@@ -96,4 +96,18 @@ class DefaultController extends Controller
 
         return $response;
     }
+
+    /**
+     * @Route("/", name="index")
+     */
+    public function indexAction()
+    {
+        $facebookHelper = $this->get('facebook_helper');
+        $posts = array_map(function ($post) use ($facebookHelper) {
+            return $facebookHelper->serializeEntity($post);
+        }, $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaPost')->findAll());
+        shuffle($posts);
+
+        return $this->render('::Front/index.html.twig', ['posts' => $posts]);
+    }
 }

@@ -3,7 +3,7 @@
         Models: {},
         Collections: {},
         Views: {},
-        MaxTiles: 12
+        MaxTiles: 21
     }
 
     App.Models.SocialPost = Backbone.Model.extend({

@@ -58,7 +58,7 @@
       $("#facebook-import-modal").on('shown.bs.modal', function (e) {
         $.ajax({
           url: $(e.relatedTarget).data('href'),
-          method: "GET",
+          method: "POST",
           success: function (data) {
             console.log(data);
           }
