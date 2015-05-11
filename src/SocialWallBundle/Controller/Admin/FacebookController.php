@@ -91,6 +91,7 @@ class FacebookController extends Controller
 
     /**
      * @Route("/import/{pageName}", name="admin_facebook_import")
+     * @Method({"POST"})
      */
     public function importAction(FacebookConfig $page)
     {
