@@ -11,12 +11,10 @@ use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
 
 use SocialWallBundle\Entity\SocialMediaPost;
 
-abstract class SocialMediaHelper
+class SocialMediaHelper
 {
     protected $appSecret;
     protected $symfonySecret;
-
-    abstract public function oAuthHandler($url, Request $request = null);
 
     /**
      * @param string $appSecret  The secret of the application

@@ -9,7 +9,7 @@ use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Entity\SocialMediaPost;
 use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
 
-class InstagramHelper extends SocialMediaHelper
+class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInterface
 {
     const API_URI = 'https://api.instagram.com/v1';
 
@@ -23,14 +23,14 @@ class InstagramHelper extends SocialMediaHelper
         $this->browser = $browser ?: new \Buzz\Browser(new \Buzz\Client\Curl());
     }
 
-    public function oAuthHandler($url, Request $request = null)
+    public function oAuthHandler($callback, Request $request = null)
     {
         if ($code = $request->query->get('code')) {
             $parameters = [
                 'client_secret' => $this->appSecret,
                 'client_id' => $this->clientId,
                 'grant_type' => 'authorization_code',
-                'redirect_uri' => $url,
+                'redirect_uri' => $callback,
                 'code' => $code,
             ];
             $response = $this->browser->submit('https://api.instagram.com/oauth/access_token', $parameters);
@@ -41,14 +41,14 @@ class InstagramHelper extends SocialMediaHelper
             }
         }
 
-        return "https://api.instagram.com/oauth/authorize/?client_id={$this->clientId}&redirect_uri={$url}&response_type=code";
+        return "https://api.instagram.com/oauth/authorize/?client_id={$this->clientId}&redirect_uri={$callback}&response_type=code";
     }
 
-    public function manualFetch($token, $tag, SocialMediaPost $lastPost = null)
+    public function manualFetch($token, $info, SocialMediaPost $lastPost = null)
     {
         $parameters = ['access_token' => $token];
         $parameters['min_id'] = $lastPost ? $lastPost->getMinTagId() : '';
-        $response = $this->browser->get(self::API_URI . "/tags/{$tag}/media/recent?" . http_build_query($parameters));
+        $response = $this->browser->get(self::API_URI . "/tags/{$info}/media/recent?" . http_build_query($parameters));
 
         $posts = [];
         $json = json_decode($response->getContent(), true);
@@ -60,7 +60,7 @@ class InstagramHelper extends SocialMediaHelper
                         ->setCreated((new \DateTime('@' . $v['created_time']))->setTimeZone(new \DateTimeZone('Europe/Paris')))
                         ->setMinTagId($json['pagination']['min_tag_id'])
                         ->setAuthorUsername($v['user']['full_name'])
-                        ->setTag($tag)
+                        ->setTag($info)
                     ;
                 }
             }
@@ -69,15 +69,15 @@ class InstagramHelper extends SocialMediaHelper
         return $posts;
     }
 
-    public function addSubscription($callbackUrl, $tag)
+    public function addSubscription($callback, $info, $accessToken = null)
     {
         $parameters = [
             'client_id' => $this->clientId,
             'client_secret' => $this->appSecret,
             'object' => 'tag',
             'aspect' => 'media',
-            'object_id' => $tag,
-            'callback_url' => $callbackUrl,
+            'object_id' => $info,
+            'callback_url' => $callback,
             'verify_token' => $this->symfonySecret,
         ];
 
