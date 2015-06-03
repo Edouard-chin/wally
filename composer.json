@@ -24,7 +24,8 @@
         "incenteev/composer-parameter-handler": "~2.0",
         "facebook/php-sdk-v4" : "4.0.*",
         "kriswallsmith/buzz": "0.13.*",
-        "nc/faye-client": "v1.1.0"
+        "nc/faye-client": "v1.1.0",
+        "ruflin/elastica": "~2.0"
     },
     "require-dev": {
         "sensio/generator-bundle": "~2.3"

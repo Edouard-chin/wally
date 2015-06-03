@@ -30,6 +30,11 @@ twig:
     debug:            "%kernel.debug%"
     strict_variables: "%kernel.debug%"
 
+services:
+    custom.elastica_formatter:
+        class: SocialWallBundle\Monolog\Formatter\ElasticaFormatter
+        arguments: [ "@security.token_storage", "%elasticsearch_monolog_index%", "record" ]
+
 # Assetic Configuration
 assetic:
     debug:          "%kernel.debug%"

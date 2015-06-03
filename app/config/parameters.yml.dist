@@ -24,3 +24,4 @@ parameters:
     facebook_page_name: caribouausoleil
     instagram_id: ~
     instagram_secret: ~
+    elasticsearch_monolog_index: monolog

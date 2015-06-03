@@ -16,3 +16,7 @@ social_wall_admin_instagram:
     resource: "@SocialWallBundle/Controller/Admin/InstagramController.php"
     type:     annotation
     prefix:   /admin/instagram
+
+social_wall_analytics:
+    resource: "@SocialWallBundle/Controller/Front/LogController.php"
+    type:     annotation

@@ -12,6 +12,7 @@ imports:
 #        query_cache_driver: apc
 
 monolog:
+    channels: ["analytics"]
     handlers:
         main:
             type:         fingers_crossed
@@ -23,3 +24,10 @@ monolog:
             level: debug
         console:
             type:  console
+        local_analytics:
+            type: elasticsearch
+            channels: ["analytics"]
+            elasticsearch:
+                host: localhost
+            formatter: custom.elastica_formatter
+            index: %elasticsearch_monolog_index%
