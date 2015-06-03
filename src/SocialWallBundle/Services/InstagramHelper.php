@@ -7,14 +7,11 @@ use Symfony\Component\HttpFoundation\Request;
 
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Entity\SocialMediaPost;
+use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
 
 class InstagramHelper extends SocialMediaHelper
 {
     const API_URI = 'https://api.instagram.com/v1';
-
-    static $item = [
-        'image',
-    ];
 
     private $clientId;
     private $browser;
@@ -47,31 +44,29 @@ class InstagramHelper extends SocialMediaHelper
         return "https://api.instagram.com/oauth/authorize/?client_id={$this->clientId}&redirect_uri={$url}&response_type=code";
     }
 
-    public function searchForRecentTag($tag, $accessToken, SocialMediaPost $lastMessageRetrieved = null)
+    public function manualFetch($token, $tag, SocialMediaPost $lastPost = null)
     {
-        $parameters = [
-            'access_token' => $accessToken
-        ];
-        if ($lastMessageRetrieved) {
-            $parameters['min_id'] = $lastMessageRetrieved->getMinTagId();
-        }
-
+        $parameters = ['access_token' => $token];
+        $parameters['min_id'] = $lastPost ? $lastPost->getMinTagId() : '';
         $response = $this->browser->get(self::API_URI . "/tags/{$tag}/media/recent?" . http_build_query($parameters));
-        $newPosts = [];
+
+        $posts = [];
         $json = json_decode($response->getContent(), true);
         if ($response->isSuccessful()) {
             foreach ($json['data'] as $k => $v) {
-                if (in_array($v['type'], self::$item) && array_key_exists('caption', $v)) {
-                    $newPosts[$v['id']]['message'] = $v['caption']['text'];
-                    $newPosts[$v['id']]['created'] = (new \DateTime('@' . $v['created_time']))->setTimeZone(new \DateTimeZone('Europe/Paris'));
-                    $newPosts[$v['id']]['minTagId'] = $json['pagination']['min_tag_id'];
-                    $newPosts[$v['id']]['author'] = $v['user']['full_name'];
-                    $newPosts[$v['id']]['image'] = $v['images']['standard_resolution']['url'];
+                if ($v['type'] == 'image' && array_key_exists('caption', $v)) {
+                    $posts[] = (new InstagramPost())
+                        ->setMessage($v['caption']['text'])
+                        ->setCreated((new \DateTime('@' . $v['created_time']))->setTimeZone(new \DateTimeZone('Europe/Paris')))
+                        ->setMinTagId($json['pagination']['min_tag_id'])
+                        ->setAuthorUsername($v['user']['full_name'])
+                        ->setTag($tag)
+                    ;
                 }
             }
         }
 
-        return $newPosts;
+        return $posts;
     }
 
     public function addSubscription($callbackUrl, $tag)

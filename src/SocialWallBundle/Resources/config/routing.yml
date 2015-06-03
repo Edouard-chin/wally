@@ -11,3 +11,8 @@ social_wall_admin_facebook:
     resource: "@SocialWallBundle/Controller/Admin/FacebookController.php"
     type:     annotation
     prefix:   /admin/facebook
+
+social_wall_admin_instagram:
+    resource: "@SocialWallBundle/Controller/Admin/InstagramController.php"
+    type:     annotation
+    prefix:   /admin/instagram

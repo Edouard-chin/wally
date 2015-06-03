@@ -28,9 +28,9 @@
         var post = JSON.parse(post[0]);
         collection.add(post);
       });
-      // setInterval(function () {
-      //   views.trigger('cycle');
-      // }, 1000);
+      setInterval(function () {
+        views.trigger('cycle');
+      }, 5000);
     })
   </script>
 {% endblock javascripts %}

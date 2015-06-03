@@ -1,7 +1,7 @@
 {% extends '::base_admin.html.twig' %}
 {% block container %}
   {% embed '::modal.html.twig' %}
-    {% block id %}facebook-import-modal{% endblock %}
+    {% block id %}import-modal{% endblock %}
     {% block modal_title %}Import en cours{% endblock %}
     {% block modal_body %}Test{% endblock %}
     {% block modal_footer %}
@@ -11,12 +11,12 @@
   {% endembed %}
   <div role="tabpanel">
     <ul class="nav nav-tabs" role="tablist">
-      <li role="presentation" class="active"><a data-toggle="tab" href="#home">Config Facebook</a></li>
-      <li role="presentation"><a data-toggle="tab" href="#profile">Config Twitter</a></li>
-      <li role="presentation"><a data-toggle="tab" href="#messages">Config Instagram</a></li>
+      <li role="presentation" class="active"><a data-toggle="tab" href="#facebook">Config Facebook</a></li>
+      <li role="presentation"><a data-toggle="tab" href="#twitter">Config Twitter</a></li>
+      <li role="presentation"><a data-toggle="tab" href="#instagram">Config Instagram</a></li>
     </ul>
     <div class="tab-content">
-      <div role="tabpanel" class="tab-pane fade in active" id="home">
+      <div role="tabpanel" class="tab-pane fade in active" id="facebook">
         {% if app.session.get('user_access_token') %}
           <form action="{{ path('admin_facebook_subscribe') }}" method="POST">
             <div class="form-group">
@@ -36,14 +36,20 @@
               </form>
             </div>
             <div class="col-sm-2">
-              <a class="btn btn-info" data-toggle="modal" data-target="#facebook-import-modal" id="import-facebook-post" data-href="{{ path('admin_facebook_import', {'pageName': facebookPage.pageName}) }}"> Importer </a>
+              <a class="btn btn-info" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_facebook_import', {'pageName': facebookPage.pageName}) }}"> Importer </a>
             </div>
             <div class="clearfix"></div>
           {% endfor %}
         </div>
       </div>
-      <div role="tabpanel" class="tab-pane fade" id="profile">Dudek</div>
-      <div role="tabpanel" class="tab-pane fade" id="messages">Pouet</div>
+      <div role="tabpanel" class="tab-pane fade" id="twitter">Twitter Config</div>
+      <div role="tabpanel" class="tab-pane fade" id="instagram">
+        <ul>
+          {% for tag in instagramTags %}
+            <li> {{ tag }} - <a class="btn btn-success" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_instagram_import', {'tag': tag}) }}">Importer</a></li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
   </div>
 {% endblock container %}
@@ -55,7 +61,7 @@
       $(".modal-body").html(json.message);
     });
     $(function () {
-      $("#facebook-import-modal").on('shown.bs.modal', function (e) {
+      $("#import-modal").on('shown.bs.modal', function (e) {
         $.ajax({
           url: $(e.relatedTarget).data('href'),
           method: "POST",
