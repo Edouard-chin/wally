@@ -55,7 +55,6 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
         return $posts;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -83,18 +82,18 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
             }
         }
 
-        throw new OAuthException("You are not the admin of the page: {$pageName}");
+        throw new OAuthException("You are not the admin of the page: {$info}");
     }
 
     /**
      * {@inheritDoc}
      */
-    public function removeSubscription($id)
+    public function removeSubscription($info)
     {
         $request = (new FacebookRequest(
             new FacebookSession($this->appToken),
             'DELETE',
-            "/{$id}/subscribed_apps"
+            "/{$info}/subscribed_apps"
         ))->execute()->getGraphObject();
 
         return $request->getProperty('success');

@@ -16,6 +16,11 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
     private $clientId;
     private $browser;
 
+    /**
+     * @param string $clientid Instagram client id
+     * @param string $clientSecret Instagram client secret
+     * @param Browswer $browser    An instance of Buzz\Browser
+     */
     public function __construct($clientId, $clientSecret, \Buzz\Browser $browser = null)
     {
         $this->clientId = $clientId;
@@ -23,6 +28,9 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
         $this->browser = $browser ?: new \Buzz\Browser(new \Buzz\Client\Curl());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function oAuthHandler($callback, Request $request = null)
     {
         if ($code = $request->query->get('code')) {
@@ -44,6 +52,9 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
         return "https://api.instagram.com/oauth/authorize/?client_id={$this->clientId}&redirect_uri={$callback}&response_type=code";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function manualFetch($token, $info, SocialMediaPost $lastPost = null)
     {
         $parameters = ['access_token' => $token];
@@ -69,6 +80,9 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
         return $posts;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function addSubscription($callback, $info, $accessToken = null)
     {
         $parameters = [
@@ -87,29 +101,38 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
         }
     }
 
-    public function removeSubscription($id)
+    /**
+     * {@inheritDoc}
+     */
+    public function removeSubscription($info)
     {
         $response = $this->browser->delete(self::API_URI . '/subscriptions?' . http_build_query([
             'client_secret' => $this->appSecret,
             'client_id'     => $this->clientId,
-            'id'            => $id,
+            'id'            => $info,
         ]));
-        if (!$response->isSuccessful()) {
-            throw new OAuthException();
-        }
+
+        return $response->isSuccessful();
     }
 
-    public function setSubscriptions($callbackUrl, array $tags)
+    /**
+     * @param string $callback
+     * @param array  $tags
+     */
+    public function setSubscriptions($callback, array $tags)
     {
         $subscribed = $this->getSubscriptions();
         foreach (array_diff($subscribed, $tags) as $key => $v) {
             $this->removeSubscription($key);
         }
         foreach(array_diff($tags, $subscribed) as $v) {
-            $this->addSubscription($callbackUrl, $v);
+            $this->addSubscription($callback, $v);
         }
     }
 
+    /**
+     * @return array An array of tag you subscribed to
+     */
     public function getSubscriptions()
     {
         $url = self::API_URI . '/subscriptions?' . http_build_query([

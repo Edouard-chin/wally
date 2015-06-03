@@ -50,7 +50,7 @@ class FacebookController extends Controller
             $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');
         } else {
             try {
-                $page = $facebookHelper->addSubscription($accessToken, $this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'));
+                $page = $facebookHelper->addSubscription($this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'), $accessToken);
                 $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->updateOrCreatePage($page);
                 $this->addFlash('success', "Vous souscrivez maintenant à la page: {$pageName}");
             } catch (TokenException $e) {
