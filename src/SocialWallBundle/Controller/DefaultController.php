@@ -2,18 +2,11 @@
 
 namespace SocialWallBundle\Controller;
 
-use Facebook\FacebookRequestException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-
-use SocialWallBundle\Entity\SocialMediaPost\FacebookPost;
-use SocialWallBundle\Event\SocialMediaEvent;
-use SocialWallBundle\Exception\OAuthException;
-use SocialWallBundle\SocialMediaType;
 
 class DefaultController extends Controller
 {
@@ -25,9 +18,9 @@ class DefaultController extends Controller
         $response = new Response();
         $facebookHelper = $this->get('facebook_helper');
 
-        if ($request->getMethod() == "GET" && $facebookHelper->responseToSubscription($request, $response)) {
+        if ($request->getMethod() == 'GET' && $facebookHelper->responseToSubscription($request, $response)) {
             return $response;
-        } elseif ($request->getMethod() == "POST" && $facebookHelper->checkPayloadSignature($request, "sha1=")) {
+        } elseif ($request->getMethod() == 'POST' && $facebookHelper->checkPayloadSignature($request, 'sha1=')) {
             return new StreamedResponse(function () use ($request, $facebookHelper) {
                 $em = $this->getDoctrine()->getManager();
                 $posts = $facebookHelper->updateHandler($request->getContent());
@@ -49,9 +42,9 @@ class DefaultController extends Controller
         $response = new Response();
         $instagramHelper = $this->get('instagram_helper');
 
-        if ($request->getMethod() == "GET" && $instagramHelper->responseToSubscription($request, $response)) {
+        if ($request->getMethod() == 'GET' && $instagramHelper->responseToSubscription($request, $response)) {
             return $response;
-        } elseif ($request->getMethod() == "POST" && $instagramHelper->checkPayloadSignature($request)) {
+        } elseif ($request->getMethod() == 'POST' && $instagramHelper->checkPayloadSignature($request)) {
             return new StreamedResponse(function () use ($request, $instagramHelper) {
                 $em = $this->getDoctrine()->getManager();
                 $accesToken = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->find(1)->getToken();

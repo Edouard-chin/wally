@@ -3,7 +3,6 @@
 namespace SocialWallBundle\Entity\SocialMediaConfig;
 
 use Doctrine\ORM\Mapping as ORM;
-
 use SocialWallBundle\Entity\SocialMediaConfig;
 use SocialWallBundle\SocialMediaType;
 
@@ -26,6 +25,7 @@ class InstagramConfig extends SocialMediaConfig
 
     /**
      * @param array $tags
+     *
      * @return SocialMediaConfig
      */
     public function setTags($tags)

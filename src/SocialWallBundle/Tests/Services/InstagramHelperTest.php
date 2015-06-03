@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 class InstagramHelperTest extends \PHPUnit_Framework_TestCase
 {
     const SECRET = 'client_secret';
-    const ID     = 'client_id';
+    const ID = 'client_id';
 
     /**
      * @dataProvider retrievedSubscriptions
@@ -143,14 +143,14 @@ class InstagramHelperTest extends \PHPUnit_Framework_TestCase
                       "id": "17248102"
                     }
                   ]
-                }'
+                }',
             ],
         ];
     }
 
     private function createBuzz(array $headers, $content = null, $method = null)
     {
-        $response = new \Buzz\Message\Response;
+        $response = new \Buzz\Message\Response();
         $response->setHeaders($headers);
         if ($content) {
             $response->setContent($content);

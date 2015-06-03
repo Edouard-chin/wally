@@ -5,7 +5,7 @@ namespace SocialWallBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * SocialMediaConfig
+ * SocialMediaConfig.
  *
  * @ORM\Entity
  * @ORM\InheritanceType("SINGLE_TABLE")
@@ -19,7 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
 abstract class SocialMediaConfig
 {
     /**
-     * @var integer
+     * @var int
      *
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
@@ -38,7 +38,7 @@ abstract class SocialMediaConfig
     abstract public function getType();
 
     /**
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -55,6 +55,7 @@ abstract class SocialMediaConfig
 
     /**
      * @param string $token
+     *
      * @return this
      */
     public function setToken($token)

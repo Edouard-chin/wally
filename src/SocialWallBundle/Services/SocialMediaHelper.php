@@ -2,13 +2,11 @@
 
 namespace SocialWallBundle\Services;
 
-use Symfony\Bundle\FrameworkBundle\Routing\Router;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
-
 use SocialWallBundle\Entity\SocialMediaPost;
 
 class SocialMediaHelper
@@ -17,7 +15,7 @@ class SocialMediaHelper
     protected $symfonySecret;
 
     /**
-     * @param string $appSecret  The secret of the application
+     * @param string $appSecret The secret of the application
      */
     public function setAppSecret($appSecret)
     {
@@ -25,8 +23,8 @@ class SocialMediaHelper
     }
 
     /**
-     * @param string $symfonySecret   The symfony secret used when subscribing for
-     *                                Realtime notification
+     * @param string $symfonySecret The symfony secret used when subscribing for
+     *                              Realtime notification
      */
     public function setSymfonySecret($symfonySecret)
     {
@@ -39,7 +37,7 @@ class SocialMediaHelper
     public function checkPayloadSignature(Request $request, $prefix = '')
     {
         $payloadSignature = $request->headers->get('X-Hub-Signature');
-        $realSignature = $prefix . hash_hmac('sha1', $request->getContent(), $this->appSecret);
+        $realSignature = $prefix.hash_hmac('sha1', $request->getContent(), $this->appSecret);
 
         return $realSignature == $payloadSignature;
     }
@@ -52,6 +50,7 @@ class SocialMediaHelper
     {
         if ($request->query->get('hub_verify_token') == $this->symfonySecret) {
             $response->setContent($request->query->get('hub_challenge'));
+
             return true;
         }
 
@@ -59,8 +58,9 @@ class SocialMediaHelper
     }
 
     /**
-     * @param  SocialMediaPost  $post   An instance of SocialMediaPost
-     * @return string                   Json encoded datas
+     * @param SocialMediaPost $post An instance of SocialMediaPost
+     *
+     * @return string Json encoded datas
      */
     public function serializeEntity(SocialMediaPost $post)
     {
@@ -69,7 +69,7 @@ class SocialMediaHelper
             ->setCallbacks([
                 'created' => function ($value) {
                     return $value instanceof \DateTime ? $value->format('d-m-Y h:i') : '';
-                }
+                },
             ])
         ;
         $serializer = new Serializer([$normalizer], [new JsonEncoder()]);

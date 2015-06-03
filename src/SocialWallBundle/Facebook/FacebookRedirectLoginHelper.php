@@ -17,18 +17,18 @@ class FacebookRedirectLoginHelper extends BaseClass
     }
 
     /**
-    * {@inheritDoc}
-    */
+     * {@inheritDoc}
+     */
     protected function storeState($state)
     {
-        $this->session->set($this->sessionPrefix . 'state', $state);
+        $this->session->set($this->sessionPrefix.'state', $state);
     }
 
     /**
-    * {@inheritDoc}
-    */
+     * {@inheritDoc}
+     */
     protected function loadState()
     {
-        return $this->session->get($this->sessionPrefix . 'state');
+        return $this->session->get($this->sessionPrefix.'state');
     }
 }

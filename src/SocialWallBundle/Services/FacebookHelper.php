@@ -5,14 +5,11 @@ namespace SocialWallBundle\Services;
 use Facebook\Entities\AccessToken;
 use Facebook\FacebookSession;
 use Facebook\FacebookRequest;
-use Facebook\FacebookRequestException;
 use Facebook\FacebookAuthorizationException;
-
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Exception\TokenException;
 use SocialWallBundle\Entity\SocialMediaPost;
 use SocialWallBundle\Facebook\FacebookRedirectLoginHelper;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 
@@ -78,6 +75,7 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
                 } catch (FacebookAuthorizationException $e) {
                     throw new OAuthException("There was a problem trying to subscribe to the page. Error code: {$e->getHttpStatusCode()}");
                 }
+
                 return $userPage;
             }
         }
@@ -100,7 +98,8 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
     }
 
     /**
-     * @param string $datas           JSON encoded datas
+     * @param string $datas JSON encoded datas
+     *
      * @return array FacebookPost
      */
     public function updateHandler($datas)
@@ -123,8 +122,9 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
     }
 
     /**
-     * @param string $token      A facebook access token
-     * @param string $pageName   The name of the facebook page
+     * @param string $token    A facebook access token
+     * @param string $pageName The name of the facebook page
+     *
      * @return GraphPage
      */
     public function getPageInfo($token, $pageName)
@@ -146,7 +146,7 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
      * Make a request to the FB API to subscribe to the page, then,
      * make another request to subscribe for real time notification on the page.
      *
-     * @param string $pageToken    The access token of the page
+     * @param string $pageToken The access token of the page
      */
     private function subscribeToPage($pageToken, $pageId, $callbackUrl)
     {

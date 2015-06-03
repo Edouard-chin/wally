@@ -4,13 +4,11 @@ namespace SocialWallBundle\Controller\Admin;
 
 use Facebook\FacebookAuthorizationException;
 use Facebook\FacebookRequestException;
-
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Exception\TokenException;
 use SocialWallBundle\Entity\SocialMediaConfig\FacebookConfig;
@@ -41,6 +39,7 @@ class FacebookController extends Controller
 
     /**
      * @Route("/subscribe", name="admin_facebook_subscribe")
+     *
      * @Method({"POST"})
      */
     public function addFacebookSubscriptionAction(Request $request)
@@ -68,6 +67,7 @@ class FacebookController extends Controller
 
     /**
      * @Route("/unsubscribe/{pageName}", name="admin_facebook_unsubscribe")
+     *
      * @Method({"DELETE", "POST"})
      */
     public function removeFacebookSubscriptionAction(Request $request, FacebookConfig $config)
@@ -91,6 +91,7 @@ class FacebookController extends Controller
 
     /**
      * @Route("/import/{pageName}", name="admin_facebook_import")
+     *
      * @Method({"POST"})
      */
     public function importAction(FacebookConfig $page)

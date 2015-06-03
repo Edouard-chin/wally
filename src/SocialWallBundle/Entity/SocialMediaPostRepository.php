@@ -7,7 +7,7 @@ use Doctrine\ORM\EntityRepository;
 class SocialMediaPostRepository extends EntityRepository
 {
     /**
-     * @param array $type    An array with namespace classes or DiscriminatorMap keys
+     * @param array $type An array with namespace classes or DiscriminatorMap keys
      */
     public function getPost(array $type = null)
     {

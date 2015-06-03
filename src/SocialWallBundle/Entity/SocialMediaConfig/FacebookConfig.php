@@ -3,7 +3,6 @@
 namespace SocialWallBundle\Entity\SocialMediaConfig;
 
 use Doctrine\ORM\Mapping as ORM;
-
 use SocialWallBundle\Entity\SocialMediaConfig;
 use SocialWallBundle\SocialMediaType;
 
@@ -40,6 +39,7 @@ class FacebookConfig extends SocialMediaConfig
 
     /**
      * @param string $pageName
+     *
      * @return this
      */
     public function setPageName($pageName)
@@ -59,6 +59,7 @@ class FacebookConfig extends SocialMediaConfig
 
     /**
      * @param string $pageId
+     *
      * @return this
      */
     public function setPageId($pageId)

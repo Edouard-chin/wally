@@ -60,7 +60,7 @@ abstract class SocialMediaPost
     abstract public function getType();
 
     /**
-     * @return integer
+     * @return int
      */
     public function getId()
     {
@@ -68,7 +68,8 @@ abstract class SocialMediaPost
     }
 
     /**
-     * @param boolean $visible
+     * @param bool $visible
+     *
      * @return SocialMediaPost
      */
     public function setVisible($visible)
@@ -79,7 +80,7 @@ abstract class SocialMediaPost
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function getVisible()
     {
@@ -88,6 +89,7 @@ abstract class SocialMediaPost
 
     /**
      * @param string $message
+     *
      * @return SocialMediaPost
      */
     public function setMessage($message)
@@ -107,6 +109,7 @@ abstract class SocialMediaPost
 
     /**
      * @param \DateTime $created
+     *
      * @return SocialMediaPost
      */
     public function setCreated($created)
@@ -126,6 +129,7 @@ abstract class SocialMediaPost
 
     /**
      * @param string $authorUsername
+     *
      * @return SocialMediaPost
      */
     public function setAuthorUsername($authorUsername)

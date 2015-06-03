@@ -6,7 +6,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use SocialWallBundle\Exception\OAuthException;
 
 class InstagramController extends Controller
@@ -21,6 +20,7 @@ class InstagramController extends Controller
             $accessToken = $instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request);
         } catch (OAuthException $e) {
             $this->addFlash('error', "Nous n'avons pas pu vous identifier, merci de rééssayer.");
+
             return $this->redirectToRoute('admin_index');
         }
 
@@ -34,7 +34,7 @@ class InstagramController extends Controller
         } catch (OAuthException $e) {
             $this->addFlash('error', "Nous n'avons pas pu souscrire aux tags");
         }
-        $this->addFlash('success', "Vous êtes bien identifié.");
+        $this->addFlash('success', 'Vous êtes bien identifié.');
 
         return $this->redirectToRoute('admin_index');
     }

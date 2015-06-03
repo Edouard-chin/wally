@@ -4,7 +4,6 @@ namespace SocialWallBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
 use Facebook\GraphPage;
-
 use SocialWallBundle\Entity\SocialMediaConfig\FacebookConfig;
 
 class FacebookConfigRepository extends EntityRepository

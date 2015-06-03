@@ -8,17 +8,17 @@ use Symfony\Component\HttpFoundation\Request;
 interface SocialMediaHelperInterface
 {
     /**
-     * Handles the OAuth connection
+     * Handles the OAuth connection.
      *
-     * @param string  $callback  The url the media will redirect to when user will approve your app
-     * @param Request $request   An instance of Request
+     * @param string  $callback The url the media will redirect to when user will approve your app
+     * @param Request $request  An instance of Request
      *
-     * @return string|object     Can return the login url, an access token, or an object (a FacebookSession for instance)
+     * @return string|object Can return the login url, an access token, or an object (a FacebookSession for instance)
      */
     public function oAuthHandler($callback, Request $request = null);
 
     /**
-     * Used for the PubSubHubbub protocol, request a new subscription to something
+     * Used for the PubSubHubbub protocol, request a new subscription to something.
      *
      * @param string $callback    The url the media will request to send data
      * @param string $info        The info you need for subscription (instagram tag, facebook page ...)
@@ -27,17 +27,17 @@ interface SocialMediaHelperInterface
     public function addSubscription($callback, $info, $accessToken = null);
 
     /**
-     * Remove a subscription, you will no longer receive update when new event arrives
+     * Remove a subscription, you will no longer receive update when new event arrives.
      *
      * @param string $info The id you need for unsubscribing (instagram tag, facebook page ...)
      *
-     * @return boolean   Whether or not the request to unsubscribe was a success
+     * @return bool Whether or not the request to unsubscribe was a success
      */
     public function removeSubscription($info);
 
     /**
      * Use this function if you'd like after subscribing, fetch a whole facebook page to get
-     * all comments or retrieves all posts with a particular tag from instagram
+     * all comments or retrieves all posts with a particular tag from instagram.
      *
      * @param string          $token    A valid accessToken
      * @param string          $info     The info you need to fetch

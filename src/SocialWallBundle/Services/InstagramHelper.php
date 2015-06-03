@@ -2,9 +2,7 @@
 
 namespace SocialWallBundle\Services;
 
-use Buzz\Exception\ClientException;
 use Symfony\Component\HttpFoundation\Request;
-
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Entity\SocialMediaPost;
 use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
@@ -17,9 +15,9 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
     private $browser;
 
     /**
-     * @param string $clientid Instagram client id
-     * @param string $clientSecret Instagram client secret
-     * @param Browswer $browser    An instance of Buzz\Browser
+     * @param string   $clientid     Instagram client id
+     * @param string   $clientSecret Instagram client secret
+     * @param Browswer $browser      An instance of Buzz\Browser
      */
     public function __construct($clientId, $clientSecret, \Buzz\Browser $browser = null)
     {
@@ -59,7 +57,7 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
     {
         $parameters = ['access_token' => $token];
         $parameters['min_id'] = $lastPost ? $lastPost->getMinTagId() : '';
-        $response = $this->browser->get(self::API_URI . "/tags/{$info}/media/recent?" . http_build_query($parameters));
+        $response = $this->browser->get(self::API_URI."/tags/{$info}/media/recent?".http_build_query($parameters));
 
         $posts = [];
         $json = json_decode($response->getContent(), true);
@@ -68,7 +66,7 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
                 if ($v['type'] == 'image' && array_key_exists('caption', $v)) {
                     $posts[] = (new InstagramPost())
                         ->setMessage($v['caption']['text'])
-                        ->setCreated((new \DateTime('@' . $v['created_time']))->setTimeZone(new \DateTimeZone('Europe/Paris')))
+                        ->setCreated((new \DateTime('@'.$v['created_time']))->setTimeZone(new \DateTimeZone('Europe/Paris')))
                         ->setMinTagId($json['pagination']['min_tag_id'])
                         ->setAuthorUsername($v['user']['full_name'])
                         ->setTag($info)
@@ -95,7 +93,7 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
             'verify_token' => $this->symfonySecret,
         ];
 
-        $response = $this->browser->submit(self::API_URI . '/subscriptions/', $parameters);
+        $response = $this->browser->submit(self::API_URI.'/subscriptions/', $parameters);
         if (!$response->isSuccessful()) {
             throw new OAuthException();
         }
@@ -106,10 +104,10 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
      */
     public function removeSubscription($info)
     {
-        $response = $this->browser->delete(self::API_URI . '/subscriptions?' . http_build_query([
+        $response = $this->browser->delete(self::API_URI.'/subscriptions?'.http_build_query([
             'client_secret' => $this->appSecret,
-            'client_id'     => $this->clientId,
-            'id'            => $info,
+            'client_id' => $this->clientId,
+            'id' => $info,
         ]));
 
         return $response->isSuccessful();
@@ -125,7 +123,7 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
         foreach (array_diff($subscribed, $tags) as $key => $v) {
             $this->removeSubscription($key);
         }
-        foreach(array_diff($tags, $subscribed) as $v) {
+        foreach (array_diff($tags, $subscribed) as $v) {
             $this->addSubscription($callback, $v);
         }
     }
@@ -135,9 +133,9 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
      */
     public function getSubscriptions()
     {
-        $url = self::API_URI . '/subscriptions?' . http_build_query([
+        $url = self::API_URI.'/subscriptions?'.http_build_query([
             'client_secret' => $this->appSecret,
-            'client_id'     => $this->clientId,
+            'client_id' => $this->clientId,
         ]);
         $response = $this->browser->get($url);
         $subscriptions = [];
