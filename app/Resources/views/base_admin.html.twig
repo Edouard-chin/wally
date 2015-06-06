@@ -1,83 +1,197 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Wally {% block title %} {% endblock title %}</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-  {% block stylesheets %} {% endblock stylesheets %}
-</head>
-<body>
-  {{ render(url('analytics', {'path': app.request.attributes.get('_route')})) }}
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="#">Brand</a>
-      </div>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
-          <li><a href="#">Link</a></li>
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Dropdown <span class="caret"></span></a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="#">Action</a></li>
-              <li><a href="#">Another action</a></li>
-              <li><a href="#">Something else here</a></li>
-              <li class="divider"></li>
-              <li><a href="#">Separated link</a></li>
-              <li class="divider"></li>
-              <li><a href="#">One more separated link</a></li>
-            </ul>
-          </li>
-        </ul>
-        <form class="navbar-form navbar-left" role="search">
-          <div class="form-group">
-            <input type="text" class="form-control" placeholder="Search">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A social wall SAAS platform" />
+  <meta name="author" content="Edouard CHIN" />
+
+  <title>Admin Wally {% block title %}{% endblock %}</title>
+
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">
+  {% stylesheets
+    '@admin_base_css'
+    filter='cssrewrite' output='compiled/css/admin-base.css' %}
+    <link rel="stylesheet" href="{{ asset_url }}">
+  {% endstylesheets %}
+  {% block stylesheets %}{% endblock stylesheets %}
+</head>
+<body class="page-body" data-url="{{ url(app.request.get('_route')) }}">
+  <div class="page-container">
+    <div class="sidebar-menu">
+      <div class="sidebar-menu-inner">
+        <header class="logo-env">
+          <div class="logo">
+            <a href="index.html">
+              <img src="" width="120" alt="" /> {# TOFIX #}
+            </a>
           </div>
-          <button type="submit" class="btn btn-default">Submit</button>
-        </form>
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="#">Link</a></li>
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Dropdown <span class="caret"></span></a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="#">Action</a></li>
-              <li><a href="#">Another action</a></li>
-              <li><a href="#">Something else here</a></li>
-              <li class="divider"></li>
-              <li><a href="#">Separated link</a></li>
+          <div class="sidebar-collapse">
+            <a href="#" class="sidebar-collapse-icon">
+              <i class="entypo-menu"></i>
+            </a>
+          </div>
+          <div class="sidebar-mobile-menu visible-xs">
+            <a href="#" class="with-animation">
+              <i class="entypo-menu"></i>
+            </a>
+          </div>
+        </header>
+        <ul id="main-menu" class="main-menu">
+          <li>
+            <a href="layout-api.html">
+              <i class="entypo-layout"></i>
+              <span class="title">Layouts</span>
+            </a>
+            <ul>
+              <li>
+                <a href="layout-api.html">
+                  <span class="title">Layout API</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-collapsed-sidebar.html">
+                  <span class="title">Collapsed Sidebar</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-fixed-sidebar.html">
+                  <span class="title">Fixed Sidebar</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-chat-open.html">
+                  <span class="title">Chat Open</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-horizontal-menu-boxed.html">
+                  <span class="title">Horizontal Menu Boxed</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-horizontal-menu-fluid.html">
+                  <span class="title">Horizontal Menu Fluid</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-mixed-menus.html">
+                  <span class="title">Mixed Menus</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-right-sidebar.html">
+                  <span class="title">Right Sidebar</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-both-menus-right-sidebar.html">
+                  <span class="title">Both Menus (Right Sidebar)</span>
+                </a>
+              </li>
+              <li>
+                <a href="layout-page-transition-fade.html">
+                  <span class="title">Page Enter Transitions</span>
+                </a>
+                <ul>
+                  <li>
+                    <a href="layout-page-transition-fade.html">
+                      <span class="title">Fade Scale</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="layout-page-transition-left-in.html">
+                      <span class="title">Left In</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="layout-page-transition-right-in.html">
+                      <span class="title">Right In</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="layout-page-transition-fade-only.html">
+                      <span class="title">Fade Only</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <a href="layout-boxed.html">
+                  <span class="title">Boxed Layout</span>
+                </a>
+              </li>
             </ul>
           </li>
         </ul>
-      </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
-  </nav>
-  <div class="container-fluid">
-    {% for type, flashes in app.session.flashBag %}
-      {% for message in flashes %}
-        <div class="fade in alert {% if type == 'error' %} alert-danger {% else %} alert-success {% endif %}" role="alert">
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          <span class="glyphicon {% if type == 'error' %}glyphicon-exclamation-sign{% else %}glyphicon-ok{% endif %}" aria-hidden="true"></span>
-          <span> {{ message|raw }} </span>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="row">
+        <div class="col-md-6 col-sm-8 clearfix">
+          <ul class="user-info pull-left pull-none-xsm">
+            <li class="profile-info dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                <img src="" alt="" class="img-circle" width="44" /> {# TOFIX #}
+                Edouard CHIN {# TOFIX #}
+              </a>
+              <ul class="dropdown-menu">
+                <li class="caret"></li>
+                <li>
+                  <a href="extra-timeline.html">
+                    <i class="entypo-user"></i>
+                    Edit Profile
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div>
+        <div class="col-md-6 col-sm-4 clearfix hidden-xs">
+          <ul class="list-inline links-list pull-right">
+            <li>
+              <a href="extra-login.html">
+                Log Out <i class="entypo-logout right"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <hr />
+      {% block breadcrumb %}
+        <ol class="breadcrumb bc-3" >
+          <li>
+            <a href="index.html"><i class="fa-home"></i>Home</a>
+          </li>
+          <li>
+            <a href="extra-icons.html">Extra</a>
+          </li>
+          <li class="active">
+            <strong>Gallery</strong>
+          </li>
+        </ol>
+      {% endblock breadcrumb %}
+      {% for type, flashes in app.session.flashbag %}
+        {% for message in flashes %}
+          <div class="fade in alert {% if type == 'error' %} alert-danger {% else %} alert-success {% endif %}" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <span class="glyphicon {% if type == 'error' %}glyphicon-exclamation-sign{% else %}glyphicon-ok{% endif %}" aria-hidden="true"></span>
+            <span> {{ message|raw }} </span>
+          </div>
+        {% endfor %}
       {% endfor %}
-    {% endfor %}
-    {% block container %} {% endblock container %}
+      {% block container %} {% endblock container %}
+    </div>
   </div>
-  <script type="text/javascript" src="http://localhost:3000/client.js"></script>
-  <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-  {% block javascripts %} {% endblock javascripts %}
+  {% javascripts
+    '@admin_base_js'
+    output='compiled/js/admin-base.js' %}
+    <script src="{{ asset_url }}" type="text/javascript"></script>
+  {% endjavascripts %}
+  {% block javascripts %}{% endblock %}
 </body>
 </html>
