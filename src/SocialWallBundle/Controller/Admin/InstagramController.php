@@ -7,15 +7,20 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use SocialWallBundle\Exception\OAuthException;
+use SocialWallBundle\SocialMediaType;
+use SocialWallBundle\Entity\SocialMediaConfig\InstagramConfig;
 
 class InstagramController extends Controller
 {
     /**
-     * @Route("/login", name="admin_instagram_login")
+     * @Route("/login/{id}", name="admin_instagram_login", defaults={"id"= 1})
      */
-    public function instagramLoginAction(Request $request)
+    public function instagramLoginAction(Request $request, InstagramConfig $instagramConfig)
     {
         $instagramHelper = $this->get('instagram_helper');
+        $user = $this->getUser();
+        $userManager = $this->get('fos_user.user_manager');
+
         try {
             $accessToken = $instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request);
         } catch (OAuthException $e) {
@@ -23,11 +28,8 @@ class InstagramController extends Controller
 
             return $this->redirectToRoute('admin_index');
         }
-
-        $em = $this->getDoctrine()->getManager();
-        $instagramConfig = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->find(1);
-        $instagramConfig->setToken($accessToken);
-        $em->flush();
+        $user->addAccessToken(SocialMediaType::INSTAGRAM, $accessToken);
+        $userManager->updateUser($user);
 
         try {
             $instagramHelper->setSubscriptions($this->generateUrl('instagram_real_time_update', [], true), $instagramConfig->getTags());
@@ -47,7 +49,8 @@ class InstagramController extends Controller
         $instagramHelper = $this->get('instagram_helper');
         $em = $this->getDoctrine()->getManager();
         $instagramConfig = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->find(1);
-        if (null === $accessToken = $instagramConfig->getToken()) {
+        $accessToken = $this->getUser()->getAccessTokens();
+        if (!isset($this->accessToken[SocialMediaType::INSTAGRAM])) {
             return $this->redirect($instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request));
         }
         $posts = $instagramHelper->manualFetch($accessToken, $tag);

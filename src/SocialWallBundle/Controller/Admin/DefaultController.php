@@ -5,6 +5,7 @@ namespace SocialWallBundle\Controller\Admin;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use SocialWallBundle\SocialMediaType;
 
 class DefaultController extends Controller
 {
@@ -15,11 +16,12 @@ class DefaultController extends Controller
     {
         $em = $this->getDoctrine()->getManager();
         $instagramConfig = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->find(1);
-        if (!$this->get('session')->get('user_access_token')) {
+        $accessTokens = $this->getUser()->getAccessTokens();
+        if (!isset($accessTokens[SocialMediaType::FACEBOOK])) {
             $facebookHelper = $this->get('facebook_helper');
             $this->addFlash('success', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Click to login on FB</a>');
         }
-        if (!$instagramConfig->getToken()) {
+        if (!isset($accessTokens[SocialMediaType::INSTAGRAM])) {
             $instagramHelper = $this->get('instagram_helper');
             $this->addFlash('success', '<a href="'.$instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request).'">Click to login on Instagram</a>');
         }

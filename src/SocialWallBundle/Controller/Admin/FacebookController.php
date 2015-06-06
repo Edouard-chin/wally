@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Exception\TokenException;
 use SocialWallBundle\Entity\SocialMediaConfig\FacebookConfig;
+use SocialWallBundle\SocialMediaType;
 
 class FacebookController extends Controller
 {
@@ -21,18 +22,21 @@ class FacebookController extends Controller
     public function facebookLoginAction()
     {
         $facebookHelper = $this->get('facebook_helper');
+        $user = $this->getUser();
+        $userManager = $this->get('fos_user.user_manager');
 
         try {
             $facebookSession = $facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true));
             if (!is_object($facebookSession)) {
                 return $this->redirectToRoute('admin_index');
             }
-            $this->get('session')->set('user_access_token', $facebookSession->getToken());
+            $user->addAccessToken(SocialMediaType::FACEBOOK, $facebookSession->getToken());
         } catch (FacebookRequestException $e) {
             $this->addFlash('error', "Une erreur est survenue lors de la connextion à facebook. Code d'erreur: {$e->getHttpStatusCode()}");
         } catch (\Exception $e) {
             $this->addFlash('error', 'Nous n\'avons pas pu vous identifier, merci de rééssayer.');
         }
+        $userManager->updateUser($user);
 
         return $this->redirectToRoute('admin_index');
     }
