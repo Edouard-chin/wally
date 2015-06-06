@@ -59,7 +59,7 @@ class FacebookController extends Controller
             try {
                 $page = $facebookHelper->addSubscription($this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'), $accessToken[SocialMediaType::FACEBOOK]);
                 $config = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->updateOrCreatePage($page);
-                $this->addFlash('success', $translator->trans('page_subscribe_success', ['%pageName%' => $pageName]));
+                $this->addFlash('success', $translator->trans('admin.flash.facebook.page_subscribe_success', ['%pageName%' => $pageName]));
                 $this->getUser()->addSocialMediaConfig($config);
                 $this->getDoctrine()->getManager()->flush();
             } catch (TokenException $e) {
@@ -78,12 +78,16 @@ class FacebookController extends Controller
     }
 
     /**
-     * @Route("/unsubscribe/{pageName}", name="admin_facebook_unsubscribe")
+     * @Route("/unsubscribe/{pageName}/{token}", name="admin_facebook_unsubscribe")
      *
      * @Method({"DELETE", "POST"})
      */
     public function removeFacebookSubscriptionAction(Request $request, FacebookConfig $config)
     {
+        $token = $request->query->get('token');
+        if (!$this->isCsrfTokenValid($token, 'remove_page')) {
+            throw $this->createAccessDeniedException();
+        }
         $translator = $this->get('translator');
         if (!$this->isCsrfTokenValid('subscription_remove', $request->request->get('csrf_token'))) {
             throw $this->createAccessDeniedException();

@@ -17,40 +17,73 @@
     </ul>
     <div class="tab-content">
       <div role="tabpanel" class="tab-pane fade in active" id="facebook">
-        {% if app.user.accessTokens['facebook'] is defined %}
-          <form action="{{ path('admin_facebook_subscribe') }}" method="POST">
-            <div class="form-group">
-              <input class="form-control" name="facebook_page"/>
-            </div>
-            <button type="submit" class="btn btn-success">Ajouter</button>
-          </form>
-        {% endif %}
         <div class="row">
-          {% for facebookConfig in facebookConfigs %}
-            <div class="col-sm-4"> {{ facebookConfig.pageName }}</div>
-            <div class="col-sm-2">
-              <form action="{{ path('admin_facebook_unsubscribe', {'pageName': facebookConfig.pageName}) }}" method="POST">
-                <input type="hidden" name="facebook_page" value="{{ facebookConfig.pageName }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token('subscription_remove') }}">
-                <button type="submit" class="btn btn-danger">Supprimer</button>
+          <div class="col-md-12">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Facebook Page Name</th>
+                  <th>Facebook Page Id</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for facebookConfig in facebookConfigs %}
+                  <tr>
+                    <td> {{ facebookConfig.pageName }} </td>
+                    <td> {{ facebookConfig.pageId }} </td>
+                    <td>
+                      <a href="#" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_facebook_import', {'pageName': facebookConfig.pageName}) }}"><i class="glyphicon glyphicon-download-alt"></i>Import all messages / </a>
+                      <a href="{{ path('admin_facebook_unsubscribe', {'pageName': facebookConfig.pageName, 'token': csrf_token('remove_page')}) }}"><i class="glyphicon glyphicon-remove"></i>Unsubscribe</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if app.user.accessTokens['facebook'] is defined %}
+            <hr>
+            <div class="col-sm-4">
+              <form action="{{ path('admin_facebook_subscribe') }}" method="POST">
+                <div class="input-group">
+                  <input type="text" class="form-control" name="facebook_page" placeholder="Enter the name of the page">
+                  <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary" type="button">Subscribe to page!</button>
+                  </span>
+                </div>
               </form>
             </div>
-            <div class="col-sm-2">
-              <a class="btn btn-info" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_facebook_import', {'pageName': facebookConfig.pageName}) }}"> Importer </a>
-            </div>
-            <div class="clearfix"></div>
-          {% endfor %}
+          {% endif %}
         </div>
       </div>
+
       <div role="tabpanel" class="tab-pane fade" id="twitter">Twitter Config</div>
+
       <div role="tabpanel" class="tab-pane fade" id="instagram">
-        <ul>
-          {% if instagramConfigs[0] is defined %}
-            {% for tag in instagramConfigs[0].tags %}
-              <li> {{ tag }} - <a class="btn btn-success" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_instagram_import', {'tag': tag}) }}">Importer</a></li>
-            {% endfor %}
-          {% endif %}
-        </ul>
+        {% if instagramConfigs[0] is defined %}
+          <div class="row">
+            <div class="col-md-12">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Instagram tag</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for tag in instagramConfigs[0].tags %}
+                    <tr>
+                      <td> {{ tag }} </td>
+                      <td>
+                        <a href="#" data-toggle="modal" data-target="#import-modal" id="import-instagram-post" data-href="{{ path('admin_instagram_import', {'tag': tag}) }}"><i class="glyphicon glyphicon-download-alt"></i>Import all messages / </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
