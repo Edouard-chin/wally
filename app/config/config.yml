@@ -5,7 +5,7 @@ imports:
 
 framework:
     #esi:             ~
-    #translator:      { fallbacks: ["%locale%"] }
+    translator:      { fallbacks: ["%locale%"] }
     secret:          "%secret%"
     router:
         resource: "%kernel.root_dir%/config/routing.yml"
@@ -38,7 +38,7 @@ services:
 assetic:
     debug:          "%kernel.debug%"
     use_controller: true
-    bundles:        [ ]
+    bundles:        [ 'FOSUserBundle']
     filters:
         cssrewrite: ~
     assets:
@@ -86,3 +86,8 @@ swiftmailer:
     username:  "%mailer_user%"
     password:  "%mailer_password%"
     spool:     { type: memory }
+
+fos_user:
+    db_driver: orm
+    firewall_name: main
+    user_class: SocialWallBundle\Entity\User

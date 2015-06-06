@@ -1,2 +1,5 @@
+fos_user:
+    resource: "@FOSUserBundle/Resources/config/routing/all.xml"
+
 social_wall:
     resource: "@SocialWallBundle/Resources/config/routing.yml"
