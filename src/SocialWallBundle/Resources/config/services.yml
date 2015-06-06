@@ -4,6 +4,7 @@ parameters:
     faye_curl_adapter.class: "Nc\FayeClient\Adapter\CurlAdapter"
     faye_client.class: "Nc\FayeClient\Client"
     social_media_listener.class: "SocialWallBundle\EventListener\SocialMediaListener"
+    security_config_voter.class: "SocialWallBundle\Security\Voter\ConfigVoter"
 
 services:
     social_media_helper:
@@ -33,3 +34,7 @@ services:
         arguments: [ @facebook_helper, @faye_client ]
         tags:
             - { name: doctrine.orm.entity_listener }
+    security_config_voter:
+        class: "%security_config_voter.class%"
+        tags:
+            - { name: security.voter }

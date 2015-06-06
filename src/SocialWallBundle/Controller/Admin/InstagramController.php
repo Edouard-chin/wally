@@ -63,6 +63,7 @@ class InstagramController extends Controller
      */
     public function addInstagramSubscriptionAction(Request $request)
     {
+        $this->denyAccessUnlessGranted('add_instagram_config', $config);
         $tag = $request->request->get('instagram_tag');
         $instagramHelper = $this->get('instagram_helper');
         $callback = $this->generateUrl('instagram_real_time_update', [], true);

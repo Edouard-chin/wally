@@ -50,8 +50,9 @@ class FacebookController extends Controller
      */
     public function addFacebookSubscriptionAction(Request $request)
     {
+        $this->denyAccessUnlessGranted('add_facebook_config', $user = $this->getUser());
         $facebookHelper = $this->get('facebook_helper');
-        $accessToken = $this->getUser()->getAccessTokens();
+        $accessToken = $user->getAccessTokens();
         $translator = $this->get('translator');
 
         if (!isset($accessToken[SocialMediaType::FACEBOOK])) {
@@ -61,7 +62,7 @@ class FacebookController extends Controller
                 $page = $facebookHelper->addSubscription($this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'), $accessToken[SocialMediaType::FACEBOOK]);
                 $config = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->updateOrCreatePage($page);
                 $this->addFlash('success', $translator->trans('admin.flash.facebook.page_subscribe_success', ['%pageName%' => $pageName]));
-                $this->getUser()->addSocialMediaConfig($config);
+                $user->addSocialMediaConfig($config);
                 $this->getDoctrine()->getManager()->flush();
             } catch (TokenException $e) {
                 $this->addFlash('error', $translator->trans('admin.flash.login', [
@@ -84,17 +85,19 @@ class FacebookController extends Controller
      */
     public function removeFacebookSubscriptionAction(Request $request, FacebookConfig $config, $token)
     {
+        $this->denyAccessUnlessGranted('remove_facebook_config', $config);
         if (!$this->isCsrfTokenValid('remove_subscription', $token)) {
             throw $this->createAccessDeniedException();
         }
         $translator = $this->get('translator');
         $facebookHelper = $this->get('facebook_helper');
         try {
-            $facebookHelper->removeSubscription($config->getPageId());
-            $em = $this->getDoctrine()->getManager();
-            $em->remove($config);
-            $this->addFlash('success', $translator->trans('admin.flash.facebook.page_unsubscribe_success', ['%pageName%' => $config->getPageName()]));
-            $em->flush();
+            if ($facebookHelper->removeSubscription($config->getPageId())) {
+                $em = $this->getDoctrine()->getManager();
+                $em->remove($config);
+                $this->addFlash('success', $translator->trans('admin.flash.facebook.page_unsubscribe_success', ['%pageName%' => $config->getPageName()]));
+                $em->flush();
+            }
         } catch (FacebookRequestException $e) {
             $this->addFlash('error', $e->getMessage());
         }

@@ -41,7 +41,7 @@
               </tbody>
             </table>
           </div>
-          {% if app.user.accessTokens['facebook'] is defined %}
+          {% if is_granted('add_facebook_config', app.user) %}
             <hr>
             <div class="col-sm-4">
               <form action="{{ path('admin_facebook_subscribe') }}" method="POST">
@@ -83,17 +83,19 @@
                 </tbody>
               </table>
             </div>
-            <hr>
-            <div class="col-sm-4">
-              <form action="{{ path('admin_instagram_subscribe') }}" method="POST">
-                <div class="input-group">
-                  <input type="text" class="form-control" name="instagram_tag" placeholder="Enter any hashtag">
-                  <span class="input-group-btn">
-                    <button type="submit" class="btn btn-primary" type="button">Subscribe to this hashtag!</button>
-                  </span>
-                </div>
-              </form>
-            </div>
+            {% if is_granted('add_instagram_config', app.user) %}
+              <hr>
+              <div class="col-sm-4">
+                <form action="{{ path('admin_instagram_subscribe') }}" method="POST">
+                  <div class="input-group">
+                    <input type="text" class="form-control" name="instagram_tag" placeholder="Enter any hashtag">
+                    <span class="input-group-btn">
+                      <button type="submit" class="btn btn-primary" type="button">Subscribe to this hashtag!</button>
+                    </span>
+                  </div>
+                </form>
+              </div>
+            {% endif %}
           </div>
         {% endif %}
       </div>
