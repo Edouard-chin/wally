@@ -6,6 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\SocialMediaType;
 
@@ -53,5 +54,46 @@ class InstagramController extends Controller
         $em->flush();
 
         return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @Route("/subscribe", name="admin_instagram_subscribe")
+     *
+     * @Method({"POST"})
+     */
+    public function addInstagramSubscriptionAction(Request $request)
+    {
+        $tag = $request->request->get('instagram_tag');
+        $instagramHelper = $this->get('instagram_helper');
+        $callback = $this->generateUrl('instagram_real_time_update', [], true);
+        if ($instagramHelper->addSubscription($callback, $tag)) {
+            $instagramConfig = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig')->getConfigs([SocialMediaType::INSTAGRAM], $this->getUser(), true);
+            $instagramConfig->addTag($tag);
+            $this->getDoctrine()->getManager()->flush();
+            $this->addFlash('success', "You are now subscribing to the {$tag} hashtag");
+        }
+
+        return $this->redirectToRoute('admin_index');
+    }
+
+    /**
+     * @Route("/remove/{tag}/{token}", name="admin_instagram_unsubscribe")
+     */
+    public function removeInstagramSubscriptionAction(Request $request, $tag, $token)
+    {
+        if (!$this->isCsrfTokenValid('remove_subscription', $token)) {
+            throw $this->createAccessDeniedException();
+        }
+        $instagramHelper = $this->get('instagram_helper');
+        $instagramConfig = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig')->getConfigs([SocialMediaType::INSTAGRAM], $this->getUser(), true);
+        if ($instagramHelper->removeSubscription($tag)) {
+            $instagramConfig->removeTag($tag);
+            $this->getDoctrine()->getManager()->flush();
+            $this->addFlash('success', "You unscribed to the tag: {$tag}. You will no longer receive update");
+        } else {
+            $this->addFlash('error', "We could not unsubscribe to the tag, please try again");
+        }
+
+        return $this->redirectToRoute('admin_index');
     }
 }

@@ -42,4 +42,21 @@ class InstagramConfig extends SocialMediaConfig
     {
         return $this->tags;
     }
+
+    /**
+     * @param string $hashtag
+     */
+    public function removeTag($hashtag)
+    {
+        $key = array_search($hashtag, $this->tags);
+        unset($this->tags[$key]);
+    }
+
+    /**
+     * @param string $hashtag
+     */
+    public function addTag($hashtag)
+    {
+        $this->tags[] = $hashtag;
+    }
 }

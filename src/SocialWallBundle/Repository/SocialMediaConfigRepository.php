@@ -7,7 +7,7 @@ use SocialWallBundle\Entity\User;
 
 class SocialMediaConfigRepository extends EntityRepository
 {
-    public function getConfigs(array $type, User $user)
+    public function getConfigs(array $type, User $user, $singleResult = false)
     {
         $queryBuilder = $this->createQueryBuilder('s')
             ->andWhere('s INSTANCE OF :classes')
@@ -16,6 +16,6 @@ class SocialMediaConfigRepository extends EntityRepository
             ->setParameter('user', $user)
         ;
 
-        return $queryBuilder->getQuery()->getResult();
+        return $singleResult ? $queryBuilder->getQuery()->getSingleResult() : $queryBuilder->getQuery()->getResult();
     }
 }

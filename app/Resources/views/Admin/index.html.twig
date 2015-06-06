@@ -34,7 +34,7 @@
                     <td> {{ facebookConfig.pageId }} </td>
                     <td>
                       <a href="#" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_facebook_import', {'pageName': facebookConfig.pageName}) }}"><i class="glyphicon glyphicon-download-alt"></i>Import all messages / </a>
-                      <a href="{{ path('admin_facebook_unsubscribe', {'pageName': facebookConfig.pageName, 'token': csrf_token('remove_page')}) }}"><i class="glyphicon glyphicon-remove"></i>Unsubscribe</a>
+                      <a href="{{ path('admin_facebook_unsubscribe', {'pageName': facebookConfig.pageName, 'token': csrf_token('remove_subscription')}) }}"><i class="glyphicon glyphicon-remove"></i>Unsubscribe</a>
                     </td>
                   </tr>
                 {% endfor %}
@@ -76,11 +76,23 @@
                       <td> {{ tag }} </td>
                       <td>
                         <a href="#" data-toggle="modal" data-target="#import-modal" id="import-instagram-post" data-href="{{ path('admin_instagram_import', {'tag': tag}) }}"><i class="glyphicon glyphicon-download-alt"></i>Import all messages / </a>
+                        <a href="{{ path('admin_instagram_unsubscribe', {'tag': tag, 'token': csrf_token('remove_subscription')}) }}"><i class="glyphicon glyphicon-remove"></i>Unsubscribe</a>
                       </td>
                     </tr>
                   {% endfor %}
                 </tbody>
               </table>
+            </div>
+            <hr>
+            <div class="col-sm-4">
+              <form action="{{ path('admin_instagram_subscribe') }}" method="POST">
+                <div class="input-group">
+                  <input type="text" class="form-control" name="instagram_tag" placeholder="Enter any hashtag">
+                  <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary" type="button">Subscribe to this hashtag!</button>
+                  </span>
+                </div>
+              </form>
             </div>
           </div>
         {% endif %}

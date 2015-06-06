@@ -6,6 +6,7 @@ use Facebook\FacebookAuthorizationException;
 use Facebook\FacebookRequestException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -79,19 +80,14 @@ class FacebookController extends Controller
 
     /**
      * @Route("/unsubscribe/{pageName}/{token}", name="admin_facebook_unsubscribe")
-     *
-     * @Method({"DELETE", "POST"})
+     * @ParamConverter("config", options={"mapping": {"pageName": "pageName"}})
      */
-    public function removeFacebookSubscriptionAction(Request $request, FacebookConfig $config)
+    public function removeFacebookSubscriptionAction(Request $request, FacebookConfig $config, $token)
     {
-        $token = $request->query->get('token');
-        if (!$this->isCsrfTokenValid($token, 'remove_page')) {
+        if (!$this->isCsrfTokenValid('remove_subscription', $token)) {
             throw $this->createAccessDeniedException();
         }
         $translator = $this->get('translator');
-        if (!$this->isCsrfTokenValid('subscription_remove', $request->request->get('csrf_token'))) {
-            throw $this->createAccessDeniedException();
-        }
         $facebookHelper = $this->get('facebook_helper');
         try {
             $facebookHelper->removeSubscription($config->getPageId());

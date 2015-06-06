@@ -3,6 +3,7 @@
 namespace SocialWallBundle\Services;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\Entity\SocialMediaPost;
 use SocialWallBundle\Entity\SocialMediaPost\InstagramPost;
@@ -92,11 +93,9 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
             'callback_url' => $callback,
             'verify_token' => $this->symfonySecret,
         ];
-
         $response = $this->browser->submit(self::API_URI.'/subscriptions/', $parameters);
-        if (!$response->isSuccessful()) {
-            throw new OAuthException();
-        }
+
+        return $response->isSuccessful();
     }
 
     /**
@@ -104,10 +103,18 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
      */
     public function removeSubscription($info)
     {
+        $subscriptions = $this->getSubscriptions();
+        $id = '';
+        foreach ($subscriptions as $key => $subscription) {
+            if ($subscription == strtolower($info)) {
+                $id = $key;
+                break;
+            }
+        }
         $response = $this->browser->delete(self::API_URI.'/subscriptions?'.http_build_query([
             'client_secret' => $this->appSecret,
             'client_id' => $this->clientId,
-            'id' => $info,
+            'id' => $id,
         ]));
 
         return $response->isSuccessful();
