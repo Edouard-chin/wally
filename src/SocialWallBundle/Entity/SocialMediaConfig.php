@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * SocialMediaConfig.
  *
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="SocialWallBundle\Repository\SocialMediaConfigRepository")
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="type", type="string")
  * @ORM\DiscriminatorMap({
@@ -31,6 +31,11 @@ abstract class SocialMediaConfig
      * @ORM\Column(type="text", nullable=true)
      */
     private $token;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="socialMediaConfig")
+     **/
+    private $user;
 
     /**
      * @return string
@@ -63,5 +68,24 @@ abstract class SocialMediaConfig
         $this->token = $token;
 
         return $this;
+    }
+
+    /**
+     * @param \SocialWallBundle\Entity\User $user
+     * @return SocialMediaConfig
+     */
+    public function setUser(\SocialWallBundle\Entity\User $user = null)
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return \SocialWallBundle\Entity\User
+     */
+    public function getUser()
+    {
+        return $this->user;
     }
 }

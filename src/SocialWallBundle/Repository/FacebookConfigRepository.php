@@ -12,14 +12,17 @@ class FacebookConfigRepository extends EntityRepository
     {
         $storedPage = $this->findOneBy(['pageName' => $name = $page->getName()]);
         if (!$storedPage) {
-            $this->_em->persist((new FacebookConfig())
+            $storedPage = (new FacebookConfig())
                 ->setToken($page->getProperty('access_token'))
                 ->setPageName($name)
                 ->setPageId($page->getId())
-            );
+            ;
+            $this->_em->persist($storedPage);
+
         } else {
             $storedPage->setToken($page->getProperty('access_token'));
         }
-        $this->_em->flush();
+
+        return $storedPage;
     }
 }

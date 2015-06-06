@@ -17,7 +17,7 @@
     </ul>
     <div class="tab-content">
       <div role="tabpanel" class="tab-pane fade in active" id="facebook">
-        {% if app.session.get('user_access_token') %}
+        {% if app.user.accessTokens['facebook'] is defined %}
           <form action="{{ path('admin_facebook_subscribe') }}" method="POST">
             <div class="form-group">
               <input class="form-control" name="facebook_page"/>
@@ -26,17 +26,17 @@
           </form>
         {% endif %}
         <div class="row">
-          {% for facebookPage in facebookPages %}
-            <div class="col-sm-4"> {{ facebookPage.pageName }}</div>
+          {% for facebookConfig in facebookConfigs %}
+            <div class="col-sm-4"> {{ facebookConfig.pageName }}</div>
             <div class="col-sm-2">
-              <form action="{{ path('admin_facebook_unsubscribe', {'pageName': facebookPage.pageName}) }}" method="POST">
-                <input type="hidden" name="facebook_page" value="{{ facebookPage.pageName }}">
+              <form action="{{ path('admin_facebook_unsubscribe', {'pageName': facebookConfig.pageName}) }}" method="POST">
+                <input type="hidden" name="facebook_page" value="{{ facebookConfig.pageName }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token('subscription_remove') }}">
                 <button type="submit" class="btn btn-danger">Supprimer</button>
               </form>
             </div>
             <div class="col-sm-2">
-              <a class="btn btn-info" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_facebook_import', {'pageName': facebookPage.pageName}) }}"> Importer </a>
+              <a class="btn btn-info" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_facebook_import', {'pageName': facebookConfig.pageName}) }}"> Importer </a>
             </div>
             <div class="clearfix"></div>
           {% endfor %}
@@ -45,15 +45,18 @@
       <div role="tabpanel" class="tab-pane fade" id="twitter">Twitter Config</div>
       <div role="tabpanel" class="tab-pane fade" id="instagram">
         <ul>
-          {% for tag in instagramTags %}
-            <li> {{ tag }} - <a class="btn btn-success" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_instagram_import', {'tag': tag}) }}">Importer</a></li>
-          {% endfor %}
+          {% if instagramConfigs[0] is defined %}
+            {% for tag in instagramConfigs[0].tags %}
+              <li> {{ tag }} - <a class="btn btn-success" data-toggle="modal" data-target="#import-modal" id="import-facebook-post" data-href="{{ path('admin_instagram_import', {'tag': tag}) }}">Importer</a></li>
+            {% endfor %}
+          {% endif %}
         </ul>
       </div>
     </div>
   </div>
 {% endblock container %}
 {% block javascripts %}
+  {{ parent() }}
   <script>
     var client = new Faye.Client('http://localhost:3000/');
     client.subscribe('/messages', function (message) {

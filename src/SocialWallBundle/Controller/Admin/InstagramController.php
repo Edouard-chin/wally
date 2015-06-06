@@ -8,14 +8,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use SocialWallBundle\Exception\OAuthException;
 use SocialWallBundle\SocialMediaType;
-use SocialWallBundle\Entity\SocialMediaConfig\InstagramConfig;
 
 class InstagramController extends Controller
 {
     /**
-     * @Route("/login/{id}", name="admin_instagram_login", defaults={"id"= 1})
+     * @Route("/login", name="admin_instagram_login")
      */
-    public function instagramLoginAction(Request $request, InstagramConfig $instagramConfig)
+    public function instagramLoginAction(Request $request)
     {
         $instagramHelper = $this->get('instagram_helper');
         $user = $this->getUser();
@@ -30,12 +29,6 @@ class InstagramController extends Controller
         }
         $user->addAccessToken(SocialMediaType::INSTAGRAM, $accessToken);
         $userManager->updateUser($user);
-
-        try {
-            $instagramHelper->setSubscriptions($this->generateUrl('instagram_real_time_update', [], true), $instagramConfig->getTags());
-        } catch (OAuthException $e) {
-            $this->addFlash('error', "Nous n'avons pas pu souscrire aux tags");
-        }
         $this->addFlash('success', 'Vous êtes bien identifié.');
 
         return $this->redirectToRoute('admin_index');
@@ -48,12 +41,11 @@ class InstagramController extends Controller
     {
         $instagramHelper = $this->get('instagram_helper');
         $em = $this->getDoctrine()->getManager();
-        $instagramConfig = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->find(1);
         $accessToken = $this->getUser()->getAccessTokens();
-        if (!isset($this->accessToken[SocialMediaType::INSTAGRAM])) {
+        if (!isset($accessToken[SocialMediaType::INSTAGRAM])) {
             return $this->redirect($instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request));
         }
-        $posts = $instagramHelper->manualFetch($accessToken, $tag);
+        $posts = $instagramHelper->manualFetch($accessToken[SocialMediaType::INSTAGRAM], $tag);
         foreach ($posts as $post) {
             usleep(20000);
             $em->persist($post);

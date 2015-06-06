@@ -49,13 +49,16 @@ class FacebookController extends Controller
     public function addFacebookSubscriptionAction(Request $request)
     {
         $facebookHelper = $this->get('facebook_helper');
-        if (!$accessToken = $this->get('session')->get('user_access_token')) {
+        $accessToken = $this->getUser()->getAccessTokens();
+        if (!isset($accessToken[SocialMediaType::FACEBOOK])) {
             $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');
         } else {
             try {
-                $page = $facebookHelper->addSubscription($this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'), $accessToken);
-                $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->updateOrCreatePage($page);
+                $page = $facebookHelper->addSubscription($this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'), $accessToken[SocialMediaType::FACEBOOK]);
+                $config = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->updateOrCreatePage($page);
                 $this->addFlash('success', "Vous souscrivez maintenant à la page: {$pageName}");
+                $this->getUser()->addSocialMediaConfig($config);
+                $this->getDoctrine()->getManager()->flush();
             } catch (TokenException $e) {
                 $this->get('session')->remove('user_access_token');
                 $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');

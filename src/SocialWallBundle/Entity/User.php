@@ -4,6 +4,7 @@ namespace SocialWallBundle\Entity;
 
 use FOS\UserBundle\Model\User as BaseUser;
 use Doctrine\ORM\Mapping as ORM;
+use SocialWallBundle\Entity\SocialMediaConfig;
 
 /**
  * @ORM\Entity
@@ -26,6 +27,11 @@ class User extends BaseUser
      * @ORM\Column(type="json_array", nullable=true)
      */
     private $accessTokens;
+
+    /**
+     * @ORM\OneToMany(targetEntity="SocialMediaConfig", mappedBy="user")
+     **/
+    private $socialMediaConfig;
 
     public function __construct()
     {
@@ -84,5 +90,33 @@ class User extends BaseUser
         $this->accessTokens[$type] = $token;
 
         return $this;
+    }
+
+    /**
+     * @param \SocialWallBundle\Entity\SocialMediaConfig $socialMediaConfig
+     * @return User
+     */
+    public function addSocialMediaConfig(\SocialWallBundle\Entity\SocialMediaConfig $socialMediaConfig)
+    {
+        $this->socialMediaConfig[] = $socialMediaConfig;
+        $socialMediaConfig->setUser($this);
+
+        return $this;
+    }
+
+    /**
+     * @param \SocialWallBundle\Entity\SocialMediaConfig $socialMediaConfig
+     */
+    public function removeSocialMediaConfig(\SocialWallBundle\Entity\SocialMediaConfig $socialMediaConfig)
+    {
+        $this->socialMediaConfig->removeElement($socialMediaConfig);
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getSocialMediaConfig()
+    {
+        return $this->socialMediaConfig;
     }
 }

@@ -14,8 +14,8 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-        $em = $this->getDoctrine()->getManager();
-        $instagramConfig = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->find(1);
+        $user = $this->getUser();
+        $configRespository = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig');
         $accessTokens = $this->getUser()->getAccessTokens();
         if (!isset($accessTokens[SocialMediaType::FACEBOOK])) {
             $facebookHelper = $this->get('facebook_helper');
@@ -27,8 +27,8 @@ class DefaultController extends Controller
         }
 
         return $this->render('::Admin/index.html.twig', [
-            'facebookPages' => $em->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->findAll(),
-            'instagramTags' => $instagramConfig->getTags(),
+            'facebookConfigs' => $configRespository->getConfigs([SocialMediaType::FACEBOOK], $user),
+            'instagramConfigs' => $configRespository->getConfigs([SocialMediaType::INSTAGRAM], $user),
         ]);
     }
 }
