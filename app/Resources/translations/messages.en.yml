@@ -1,0 +1,8 @@
+admin:
+    flash:
+        login: Please login on %media% first to begin. Click %url%
+        facebook:
+            connexion_error: An error occured while trying to connect on facebook. Error code: %code%
+            authentication_fails: 'Could not authenticate you, plase try again'
+            page_subscribe_success: You are now subscribing to the page: %pageName%
+            page_unsubscribe_success: 'You unsubscribed to the facebook page %pageName% you will no longer receive update'

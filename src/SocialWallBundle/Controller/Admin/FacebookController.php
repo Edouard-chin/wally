@@ -24,6 +24,7 @@ class FacebookController extends Controller
         $facebookHelper = $this->get('facebook_helper');
         $user = $this->getUser();
         $userManager = $this->get('fos_user.user_manager');
+        $translator = $this->get('translator');
 
         try {
             $facebookSession = $facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true));
@@ -32,9 +33,9 @@ class FacebookController extends Controller
             }
             $user->addAccessToken(SocialMediaType::FACEBOOK, $facebookSession->getToken());
         } catch (FacebookRequestException $e) {
-            $this->addFlash('error', "Une erreur est survenue lors de la connextion à facebook. Code d'erreur: {$e->getHttpStatusCode()}");
+            $this->addFlash('error', $translator->trans('admin.flash.facebook.connexion_error', ['%code%' => $e->getHttpStatusCode()]));
         } catch (\Exception $e) {
-            $this->addFlash('error', 'Nous n\'avons pas pu vous identifier, merci de rééssayer.');
+            $this->addFlash('error', $translator->trans('admin.flash.facebook.authentication_fails'));
         }
         $userManager->updateUser($user);
 
@@ -50,18 +51,22 @@ class FacebookController extends Controller
     {
         $facebookHelper = $this->get('facebook_helper');
         $accessToken = $this->getUser()->getAccessTokens();
+        $translator = $this->get('translator');
+
         if (!isset($accessToken[SocialMediaType::FACEBOOK])) {
             $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');
         } else {
             try {
                 $page = $facebookHelper->addSubscription($this->generateUrl('facebook_real_time_update', [], true), $pageName = $request->request->get('facebook_page'), $accessToken[SocialMediaType::FACEBOOK]);
                 $config = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig\FacebookConfig')->updateOrCreatePage($page);
-                $this->addFlash('success', "Vous souscrivez maintenant à la page: {$pageName}");
+                $this->addFlash('success', $translator->trans('page_subscribe_success', ['%pageName%' => $pageName]));
                 $this->getUser()->addSocialMediaConfig($config);
                 $this->getDoctrine()->getManager()->flush();
             } catch (TokenException $e) {
-                $this->get('session')->remove('user_access_token');
-                $this->addFlash('error', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Clique</a>');
+                $this->addFlash('error', $translator->trans('admin.flash.login', [
+                    '%url%' => '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Here</a>',
+                    '%media%' => 'facebook'
+                ]));
             } catch (FacebookAuthorizationException $e) {
                 $this->addFlash('error', 'Something wrong happened');
             } catch (OAuthException $e) {
@@ -79,6 +84,7 @@ class FacebookController extends Controller
      */
     public function removeFacebookSubscriptionAction(Request $request, FacebookConfig $config)
     {
+        $translator = $this->get('translator');
         if (!$this->isCsrfTokenValid('subscription_remove', $request->request->get('csrf_token'))) {
             throw $this->createAccessDeniedException();
         }
@@ -87,7 +93,7 @@ class FacebookController extends Controller
             $facebookHelper->removeSubscription($config->getPageId());
             $em = $this->getDoctrine()->getManager();
             $em->remove($config);
-            $this->addFlash('success', "Vous ne recevrez désormais plus de mise à jour de la page: {$config->getPageName()}");
+            $this->addFlash('success', $translator->trans('admin.flash.facebook.page_unsubscribe_success', ['%pageName%' => $config->getPageName()]));
             $em->flush();
         } catch (FacebookRequestException $e) {
             $this->addFlash('error', $e->getMessage());

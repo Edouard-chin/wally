@@ -17,13 +17,20 @@ class DefaultController extends Controller
         $user = $this->getUser();
         $configRespository = $this->getDoctrine()->getRepository('SocialWallBundle:SocialMediaConfig');
         $accessTokens = $this->getUser()->getAccessTokens();
+        $translator = $this->get('translator');
         if (!isset($accessTokens[SocialMediaType::FACEBOOK])) {
             $facebookHelper = $this->get('facebook_helper');
-            $this->addFlash('success', '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Click to login on FB</a>');
+            $this->addFlash('success', $translator->trans('admin.flash.login', [
+                '%url%' => '<a href="'.$facebookHelper->oAuthHandler($this->generateUrl('admin_facebook_login', [], true)).'">Here</a>',
+                '%media%' => 'facebook'
+            ]));
         }
         if (!isset($accessTokens[SocialMediaType::INSTAGRAM])) {
             $instagramHelper = $this->get('instagram_helper');
-            $this->addFlash('success', '<a href="'.$instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request).'">Click to login on Instagram</a>');
+            $this->addFlash('success', $translator->trans('admin.flash.login', [
+                '%url%' => '<a href="'.$instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request).'">Here</a>',
+                '%media%' => 'instagram'
+            ]));
         }
 
         return $this->render('::Admin/index.html.twig', [
