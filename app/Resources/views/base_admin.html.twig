@@ -1,24 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A social wall SAAS platform" />
-  <meta name="author" content="Edouard CHIN" />
-
-  <title>Admin Wally {% block title %}{% endblock %}</title>
-
-  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">
-  {% stylesheets
-    '@admin_base_css'
-    filter='cssrewrite' output='compiled/css/admin-base.css' %}
-    <link rel="stylesheet" href="{{ asset_url }}">
-  {% endstylesheets %}
-  {% block stylesheets %}{% endblock stylesheets %}
-</head>
-<body class="page-body" data-url="{{ url(app.request.get('_route')) }}">
+{% extends '::base.html.twig' %}
+{% block title %} Admin Wally - {% endblock %}
+{% block bodyclass %}page-body{% endblock %}
+{% block body %}
   <div class="page-container">
     <div class="sidebar-menu">
       <div class="sidebar-menu-inner">
@@ -41,89 +24,10 @@
         </header>
         <ul id="main-menu" class="main-menu">
           <li>
-            <a href="layout-api.html">
+            <a href="">
               <i class="entypo-layout"></i>
-              <span class="title">Layouts</span>
+              <span class="title">Config</span>
             </a>
-            <ul>
-              <li>
-                <a href="layout-api.html">
-                  <span class="title">Layout API</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-collapsed-sidebar.html">
-                  <span class="title">Collapsed Sidebar</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-fixed-sidebar.html">
-                  <span class="title">Fixed Sidebar</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-chat-open.html">
-                  <span class="title">Chat Open</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-horizontal-menu-boxed.html">
-                  <span class="title">Horizontal Menu Boxed</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-horizontal-menu-fluid.html">
-                  <span class="title">Horizontal Menu Fluid</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-mixed-menus.html">
-                  <span class="title">Mixed Menus</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-right-sidebar.html">
-                  <span class="title">Right Sidebar</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-both-menus-right-sidebar.html">
-                  <span class="title">Both Menus (Right Sidebar)</span>
-                </a>
-              </li>
-              <li>
-                <a href="layout-page-transition-fade.html">
-                  <span class="title">Page Enter Transitions</span>
-                </a>
-                <ul>
-                  <li>
-                    <a href="layout-page-transition-fade.html">
-                      <span class="title">Fade Scale</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="layout-page-transition-left-in.html">
-                      <span class="title">Left In</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="layout-page-transition-right-in.html">
-                      <span class="title">Right In</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="layout-page-transition-fade-only.html">
-                      <span class="title">Fade Only</span>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-              <li>
-                <a href="layout-boxed.html">
-                  <span class="title">Boxed Layout</span>
-                </a>
-              </li>
-            </ul>
           </li>
         </ul>
       </div>
@@ -140,7 +44,7 @@
               <ul class="dropdown-menu">
                 <li class="caret"></li>
                 <li>
-                  <a href="extra-timeline.html">
+                  <a href="#">
                     <i class="entypo-user"></i>
                     Edit Profile
                   </a>
@@ -152,7 +56,7 @@
         <div class="col-md-6 col-sm-4 clearfix hidden-xs">
           <ul class="list-inline links-list pull-right">
             <li>
-              <a href="extra-login.html">
+              <a href="#">
                 Log Out <i class="entypo-logout right"></i>
               </a>
             </li>
@@ -163,13 +67,7 @@
       {% block breadcrumb %}
         <ol class="breadcrumb bc-3" >
           <li>
-            <a href="index.html"><i class="fa-home"></i>Home</a>
-          </li>
-          <li>
-            <a href="extra-icons.html">Extra</a>
-          </li>
-          <li class="active">
-            <strong>Gallery</strong>
+            <a href="#"><i class="fa-home"></i>Home</a>
           </li>
         </ol>
       {% endblock breadcrumb %}
@@ -187,11 +85,7 @@
       {% block container %} {% endblock container %}
     </div>
   </div>
-  {% javascripts
-    '@admin_base_js'
-    output='compiled/js/admin-base.js' %}
-    <script src="{{ asset_url }}" type="text/javascript"></script>
-  {% endjavascripts %}
-  {% block javascripts %}{% endblock %}
-</body>
-</html>
+{% endblock body %}
+{% block javascripts %}
+  <script type="text/javascript" src="http://localhost:3000/client.js"></script>
+{% endblock %}
