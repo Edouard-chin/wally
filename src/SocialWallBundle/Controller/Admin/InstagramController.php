@@ -44,7 +44,7 @@ class InstagramController extends Controller
         $em = $this->getDoctrine()->getManager();
         $accessToken = $this->getUser()->getAccessTokens();
         if (!isset($accessToken[SocialMediaType::INSTAGRAM])) {
-            return $this->redirect($instagramHelper->oAuthHandler($this->generateUrl('admin_instagram_login', [], true), $request));
+            return new JsonResponse(['success' => true]);
         }
         $posts = $instagramHelper->manualFetch($accessToken[SocialMediaType::INSTAGRAM], $tag);
         foreach ($posts as $post) {
