@@ -3,7 +3,7 @@
         Models: {},
         Collections: {},
         Views: {},
-        MaxTiles: 16
+        MaxTiles: 12
     }
 
     App.Models.SocialPost = Backbone.Model.extend({
@@ -17,7 +17,8 @@
     })
 
     App.Views.SocialPost = Backbone.View.extend({
-        initialize: function () {
+        initialize: function (options) {
+            this.model.set('key', options.key);
             this.model.set('alreadyDisplayed', true);
         },
 
@@ -41,7 +42,7 @@
                 return !post.get('alreadyDisplayed');
             })
             _.each(stackPosts, function (socialPost) {
-                var socialPost = new App.Views.SocialPost({model: socialPost});
+                var socialPost = new App.Views.SocialPost({model: socialPost, key: this.collection.indexOf(socialPost) + 1});
                 this.$el.append(socialPost.render().el);
             }, this)
         },
