@@ -48,7 +48,7 @@ class InstagramController extends Controller
         }
         $posts = $instagramHelper->manualFetch($accessToken[SocialMediaType::INSTAGRAM], $tag);
         foreach ($posts as $post) {
-            usleep(20000);
+            usleep(100000);
             $em->persist($post);
         }
         $em->flush();
@@ -63,7 +63,7 @@ class InstagramController extends Controller
      */
     public function addInstagramSubscriptionAction(Request $request)
     {
-        $this->denyAccessUnlessGranted('add_instagram_config', $config);
+        $this->denyAccessUnlessGranted('add_instagram_config', $this->getUser());
         $tag = $request->request->get('instagram_tag');
         $instagramHelper = $this->get('instagram_helper');
         $callback = $this->generateUrl('instagram_real_time_update', [], true);

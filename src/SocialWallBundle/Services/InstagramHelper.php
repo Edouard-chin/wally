@@ -71,6 +71,7 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
                         ->setMinTagId($json['pagination']['min_tag_id'])
                         ->setAuthorUsername($v['user']['full_name'])
                         ->setTag($info)
+                        ->setPicture($v['images']['standard_resolution']['url'])
                     ;
                 }
             }

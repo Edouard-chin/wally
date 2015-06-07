@@ -49,6 +49,11 @@ abstract class SocialMediaPost
      */
     private $authorUsername;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $picture;
+
     public function __construct()
     {
         $this->retrieved = new \DateTime();
@@ -145,5 +150,25 @@ abstract class SocialMediaPost
     public function getAuthorUsername()
     {
         return $this->authorUsername;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPicture()
+    {
+        return $this->picture;
+    }
+
+    /**
+     * @param string $picture
+     *
+     * @return SocialMediaPost
+     */
+    public function setPicture($picture)
+    {
+        $this->picture = $picture;
+
+        return $this;
     }
 }

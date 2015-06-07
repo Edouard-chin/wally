@@ -116,7 +116,7 @@ class FacebookController extends Controller
         $posts = $facebookHelper->manualFetch($page->getToken(), $page->getPageId());
         $em = $this->getDoctrine()->getManager();
         foreach ($posts as $post) {
-            usleep(25000);
+            usleep(100000);
             $em->persist($post);
         }
         $em->flush();

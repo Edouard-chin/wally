@@ -2,11 +2,10 @@
 {% block container %}
   {% embed '::modal.html.twig' %}
     {% block id %}import-modal{% endblock %}
-    {% block modal_title %}Import en cours{% endblock %}
-    {% block modal_body %}Test{% endblock %}
+    {% block modal_title %}Import in progress{% endblock %}
+    {% block modal_body %}{% endblock %}
     {% block modal_footer %}
-      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      <button type="button" class="btn btn-primary">Save changes</button>
+      <button type="button" id="close-modal" class="btn btn-default" data-dismiss="modal" style="display: none">Close</button>
     {% endblock %}
   {% endembed %}
   <div role="tabpanel">
@@ -104,19 +103,37 @@
 {% endblock container %}
 {% block javascripts %}
   {{ parent() }}
+  <script type="text/template" id="modal-template">
+    <div class"row">
+      <div class="col-sm-12">
+        <div class="tile-title tile-primary">
+          <div class="icon">
+            <img src="<%= picture %>" style="height: 50%; width: 50%; border-radius: 4px">
+          </div>
+          <div class="title"><h3><%= authorUsername %></h3> <p><%= message %></p></div>
+        </div>
+      </div>
+    </div>
+  </script>
   <script>
     var client = new Faye.Client('http://localhost:3000/');
-    client.subscribe('/messages', function (message) {
-      var json = JSON.parse(message);
-      $(".modal-body").html(json.message);
+    client.subscribe('/messages', function (data) {
+      var template = _.template(
+        $("#modal-template").html()
+      );
+      var json = JSON.parse(data);
+      $(".modal-body").html(template(json));
     });
+
     $(function () {
       $("#import-modal").on('shown.bs.modal', function (e) {
         $.ajax({
           url: $(e.relatedTarget).data('href'),
           method: "POST",
           success: function (data) {
-            console.log(data);
+            if (data.success) {
+              $("#close-modal").show();
+            }
           }
         })
       })
