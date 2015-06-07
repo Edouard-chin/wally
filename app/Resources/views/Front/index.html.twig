@@ -1,17 +1,26 @@
-{% extends '::base.html.twig' %}
+{% extends '::base_front.html.twig' %}
 
 {% block stylesheets %}
   <link rel="stylesheet" type="text/css" href="{{ asset('bundles/socialwall/css/front.css') }}" />
 {% endblock %}
 
 {% block container %}
-  <div id="social-post-container"></div>
+  <div class="row" id="social-post-container"></div>
 {% endblock %}
 {% block javascripts %}
+  {{ parent() }}
   <script type="text/javascript" src="{{ asset('bundles/socialwall/js/underscore.js') }}"></script>
   <script type="text/javascript" src="{{ asset('bundles/socialwall/js/backbone.js') }}"></script>
   <script type="text/template" id="post-template">
-    <%= message %>
+    <div class="col-sm-3">
+      <div class="tile-title <% if (type == 'facebook') { %>tile-aqua<% } else { %>tile-blue<% } %>">
+        <div class="icon"> <% if (picture != null) { %><img src="<%= picture %>" style="height: 50%; width: 50%"/><% } %></i></div>
+        <div class="title">
+          <h3><%= authorUsername %></h3>
+          <p><%= message %></p>
+        </div>
+      </div>
+    </div>
   </script>
   <script type="text/javascript" src="{{ asset('bundles/socialwall/js/front.js') }}"></script>
   <script type="text/javascript">

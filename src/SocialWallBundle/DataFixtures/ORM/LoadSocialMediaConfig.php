@@ -12,15 +12,8 @@ class LoadSocialMediaConfig extends AbstractFixture implements FixtureInterface,
 {
     public function load(ObjectManager $manager)
     {
-        $instagramTags = [
-            'upro',
-            'dudek',
-            'lamernoire',
-            'caribouAuSoleil',
-        ];
-        $instagramConfig = (new InstagramConfig)
-            ->setTags($instagramTags)
-        ;
+        $instagramConfig = new InstagramConfig();
+
 
         $manager->persist($instagramConfig);
         $manager->flush();

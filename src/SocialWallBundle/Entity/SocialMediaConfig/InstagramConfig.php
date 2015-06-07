@@ -7,7 +7,7 @@ use SocialWallBundle\Entity\SocialMediaConfig;
 use SocialWallBundle\SocialMediaType;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="SocialWallBundle\Repository\InstagramConfigRepository")
  */
 class InstagramConfig extends SocialMediaConfig
 {
@@ -17,6 +17,13 @@ class InstagramConfig extends SocialMediaConfig
      * @ORM\Column(name="tags", type="simple_array", nullable=true)
      */
     private $tags;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="subscriptions", type="simple_array", nullable=true)
+     */
+    private $subscriptions;
 
     public function getType()
     {
@@ -58,5 +65,31 @@ class InstagramConfig extends SocialMediaConfig
     public function addTag($hashtag)
     {
         $this->tags[] = $hashtag;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSubscriptions()
+    {
+        return $this->subscriptions;
+    }
+
+    /**
+     * @param array $subscriptions
+     *
+     * @return InstagramConfig
+     */
+    public function setSubscriptions(array $subscriptions)
+    {
+        $this->subscriptions = $subscriptions;
+    }
+
+    /**
+     * @param string $subscription
+     */
+    public function addSubscription($subscription)
+    {
+        $this->subscriptions[] = $subscription;
     }
 }

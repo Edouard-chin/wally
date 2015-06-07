@@ -95,8 +95,13 @@ class InstagramHelper extends SocialMediaHelper implements SocialMediaHelperInte
             'verify_token' => $this->symfonySecret,
         ];
         $response = $this->browser->submit(self::API_URI.'/subscriptions/', $parameters);
+        $subscription = '';
+        if ($response->isSuccessful()) {
+            $responseContent = json_decode($response->getContent());
+            $subscription = $responseContent->data->id;
+        }
 
-        return $response->isSuccessful();
+        return [$response->isSuccessful(), $subscription];
     }
 
     /**

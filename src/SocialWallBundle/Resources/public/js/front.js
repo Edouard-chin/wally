@@ -3,7 +3,7 @@
         Models: {},
         Collections: {},
         Views: {},
-        MaxTiles: 21
+        MaxTiles: 16
     }
 
     App.Models.SocialPost = Backbone.Model.extend({
@@ -22,8 +22,6 @@
         },
 
         template: _.template($("#post-template").html()),
-
-        className: 'social-post',
 
         render: function () {
             this.$el.html(this.template(this.model.toJSON()));

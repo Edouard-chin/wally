@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use SocialWallBundle\SocialMediaType;
 
 class DefaultController extends Controller
 {
@@ -47,8 +48,9 @@ class DefaultController extends Controller
         } elseif ($request->getMethod() == 'POST' && $instagramHelper->checkPayloadSignature($request)) {
             return new StreamedResponse(function () use ($request, $instagramHelper) {
                 $em = $this->getDoctrine()->getManager();
-                $accesToken = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->find(1)->getToken();
                 foreach (json_decode($request->getContent(), true) as $data) {
+                    $instagramConfig = $em->getRepository('SocialWallBundle:SocialMediaConfig\InstagramConfig')->retrieveConfigBySubscription($data['subscription_id']);
+                    $accesToken = $instagramConfig->getUser()->getAccessTokens()[SocialMediaType::INSTAGRAM];
                     $tag = $data['object_id'];
                     $lastMessage = $em->getRepository('SocialWallBundle:SocialMediaPost\InstagramPost')->findOneBy(['tag' => $tag], ['retrieved' => 'DESC']);
                     foreach ($instagramHelper->manualFetch($accesToken, $tag, $lastMessage) as $post) {

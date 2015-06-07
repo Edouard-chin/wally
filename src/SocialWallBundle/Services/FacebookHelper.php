@@ -45,7 +45,7 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
             new FacebookSession($token),
             'GET',
             "/{$info}/feed",
-            ['limit' => 250, 'since' => $lastPost ? $lastPost->getCreated()->getTimestamp() : null]
+            ['limit' => 250, 'since' => $lastPost ? $lastPost->getCreated()->getTimestamp() : null, 'fields' => 'full_picture,message,created_time,from']
         );
         $posts = $this->recursiveFetch([], $request);
 
@@ -181,7 +181,8 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
             $posts[] = $this->createPostEntities(
                 $message,
                 (new \DateTime($v->getProperty('created_time')))->setTimeZone(new \DateTimeZone('Europe/Paris')),
-                $v->getProperty('from')->getProperty('name')
+                $v->getProperty('from')->getProperty('name'),
+                $v->getProperty('full_picture')
             );
         }
         if ($nextRequest = $response->getRequestForNextPage()) {
@@ -191,12 +192,13 @@ class FacebookHelper extends SocialMediaHelper implements SocialMediaHelperInter
         return $posts;
     }
 
-    private function createPostEntities($message, \DateTime $created, $authorUsername)
+    private function createPostEntities($message, \DateTime $created, $authorUsername, $picture = null)
     {
         return (new SocialMediaPost\FacebookPost())
             ->setMessage($message)
             ->setCreated($created)
             ->setAuthorUsername($authorUsername)
+            ->setPicture($picture)
         ;
     }
 }
