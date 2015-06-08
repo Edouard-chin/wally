@@ -12,12 +12,13 @@ class LoadSocialMediaConfig extends AbstractFixture implements FixtureInterface,
 {
     public function load(ObjectManager $manager)
     {
-        $instagramConfig = new InstagramConfig();
+        for ($i = 0; $i < 2; $i++) {
+            $instagramConfig = new InstagramConfig();
+            $manager->persist($instagramConfig);
+            $this->setReference('default-config'.$i, $instagramConfig);
+        }
 
-
-        $manager->persist($instagramConfig);
         $manager->flush();
-        $this->setReference('default-config', $instagramConfig);
     }
 
     public function getOrder()
